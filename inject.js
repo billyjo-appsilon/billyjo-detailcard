@@ -1,11 +1,11 @@
 /*!
- * billyjo-detailcard v0.3.5 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.3.6 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
  * 의존성: 기존 billyjo-inject 스크립트 (헤더 재구성·이벤트 배너 분리 처리)가 먼저 로드된 상태를 전제로 함.
  *
- * 포함 패치 (v0.3.5 기준):
+ * 포함 패치 (v0.3.6 기준):
  *   - 절대 규칙 #14: 6-8칸 스펙요약 + ⓘ 도움말 (모바일 sheet 전환, v0.3.5)
  *   - 절대 규칙 #21: 좁은화면 헤더 (inject.js 결과 DOM 안정 클래스 부여 + 모바일 1행 정렬 + .new-gnb 숨김 + 햄버거 5px)
  *   - 절대 규칙 #22-23: Hero 재배치/Step 폰트/페르소나 폰트 (AI 카드 마크업 존재 시에만 활성)
@@ -13,6 +13,7 @@
  *   - 절대 규칙 #25: 하단 fixed 위젯 (sticky→fixed, ▾/▴ 폴딩, 렌탈+사은품·상담신청 버튼)
  *   - v0.3.4: .wide-inner max-width 1480px 확장, SLOT 7 모바일 column 레이아웃
  *   - v0.3.5: .help-pop 모바일 viewport sheet 전환, 외부 탭 자동 닫힘 JS
+ *   - v0.3.6: 모바일 로고 max-width 제한 + 아이콘 리스트 shrink 허용 (로고-이벤트 겹침 해결)
  *   - 공통: 햄버거 중복 제거, 제품 썸네일 1px 회색 테두리
  *
  * AI 카드 콘텐츠 자체는 별도 backend 파이프라인에서 사전 생성되어 제품별 HTML에 주입되어야 함.
@@ -108,43 +109,69 @@
     '  }',
     '  header.new-header .header__top{',
     '    display:flex !important; align-items:center !important;',
-    '    gap:0 !important; padding:10px 14px !important;',
+    '    gap:0 !important; padding:8px 12px !important;',
     '    flex-wrap:nowrap !important; background:#fff !important;',
     '    border-bottom:1px solid #eee !important; position:relative !important;',
+    '    min-width:0 !important; overflow:hidden;',
     '  }',
     '  header.new-header .header__top .gnb__hamburger{',
     '    flex:0 0 auto !important; margin:0 5px 0 0 !important;',
     '    cursor:pointer; padding:4px;',
     '  }',
+    /* v0.3.6: 로고 max-width 제한 — intrinsic width 큰 경우 아이콘과 겹치는 문제 해결 */
     '  header.new-header .header__top .logo{',
-    '    flex:0 0 auto !important; margin:0 !important;',
+    '    flex:0 1 auto !important; margin:0 !important;',
+    '    min-width:0 !important; max-width:38vw !important;',
+    '    overflow:hidden !important;',
     '  }',
     '  header.new-header .header__top .logo img{',
-    '    height:28px !important; width:auto !important; display:block !important;',
+    '    height:26px !important; width:auto !important; max-width:100% !important;',
+    '    display:block !important; object-fit:contain;',
     '  }',
     '  header.new-header .header__top .top__right{ display:none !important }',
+    /* v0.3.6: 아이콘 리스트 flex:0 1 auto로 shrink 허용 + min-width:0 */
     '  header.new-header .header__top > ul.inline_wrap.header_m_icon,',
     '  header.new-header .header__top > ul#bj-header-icons,',
     '  header.new-header ul#bj-header-icons{',
     '    display:flex !important; align-items:center !important;',
-    '    gap:8px !important; margin:0 0 0 auto !important; padding:0 !important;',
-    '    list-style:none !important; flex:0 0 auto !important; flex-wrap:nowrap !important;',
+    '    gap:6px !important; margin:0 0 0 auto !important; padding:0 0 0 6px !important;',
+    '    list-style:none !important;',
+    '    flex:0 1 auto !important; flex-wrap:nowrap !important;',
+    '    min-width:0 !important;',
     '  }',
     '  header.new-header ul#bj-header-icons li,',
     '  header.new-header .header__top ul.inline_wrap.header_m_icon li{',
     '    margin:0 !important; padding:0 !important; list-style:none !important;',
-    '    display:inline-flex; align-items:center;',
+    '    display:inline-flex; align-items:center; flex:0 0 auto;',
     '  }',
     '  header.new-header ul#bj-header-icons li a{',
     '    display:inline-flex; align-items:center; line-height:1;',
     '  }',
     '  header.new-header ul#bj-header-icons li img{',
-    '    height:22px !important; width:auto !important; display:block;',
+    '    height:20px !important; width:auto !important; display:block;',
     '  }',
+    /* v0.3.6: 이벤트 링크 컴팩트화 + max-width로 잘림 */
     '  header.new-header ul#bj-header-icons li a[style*="ff3700"]{',
-    '    white-space:nowrap; font-size:10.5px !important;',
-    '    padding:4px 7px !important; line-height:1.2;',
+    '    white-space:nowrap; font-size:10px !important;',
+    '    padding:3px 6px !important; line-height:1.2;',
+    '    border-radius:4px !important;',
+    '    max-width:38vw; overflow:hidden; text-overflow:ellipsis;',
     '  }',
+    '}',
+    /* v0.3.6: 협소 폭 단계적 축소 */
+    '@media (max-width:400px){',
+    '  header.new-header ul#bj-header-icons li a[style*="ff3700"]{',
+    '    font-size:9.5px !important; padding:3px 5px !important;',
+    '    max-width:28vw;',
+    '  }',
+    '  header.new-header .header__top .logo{ max-width:32vw !important }',
+    '  header.new-header .header__top .logo img{ height:24px !important }',
+    '}',
+    '@media (max-width:360px){',
+    '  header.new-header .header__top{ padding:8px 10px !important }',
+    '  header.new-header ul#bj-header-icons{ gap:5px !important }',
+    '  header.new-header ul#bj-header-icons li a[style*="ff3700"]{ max-width:90px }',
+    '  header.new-header ul#bj-header-icons li img{ height:18px !important }',
     '}',
 
     /* === 하단 fixed 위젯 (.bb-inner 격상) === */

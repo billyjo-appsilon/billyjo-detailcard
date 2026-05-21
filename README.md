@@ -98,7 +98,8 @@ jsDelivr는 `@main` 브랜치를 일정 시간 캐싱한다 (~12시간). 즉시 
 
 ## 버전
 
-- **v0.3.5** (2026-05-21) — `.help-pop` ⓘ 툴팁 모바일 하단 sheet 전환 + 외부 탭 자동 닫힘
+- **v0.3.6** (2026-05-21) — 모바일 헤더 로고-이벤트 버튼 겹침 픽스 (로고 max-width:38vw + 아이콘 shrink 허용)
+- **v0.3.5** — `.help-pop` ⓘ 툴팁 모바일 하단 sheet 전환 + 외부 탭 자동 닫힘
 - **v0.3.4** — 카드 너비 `.wide-inner` 1480px 확장 + SLOT 7 모바일 column 레이아웃 + 한글 word-break:keep-all
 - **v0.3.3** — 모바일 비교표 overflow 픽스 (3-layer min-width:0)
 - **v0.3.2** — 모바일 헤더 3개 이슈 픽스 + 위젯 specificity 강화 + JS inline fallback
