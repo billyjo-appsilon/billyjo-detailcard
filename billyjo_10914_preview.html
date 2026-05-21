@@ -1,0 +1,425 @@
+<!--
+  billyjo.co.kr 상세페이지 통합 목업
+  ============================================
+  대상: https://www.billyjo.co.kr/html/dh_prod/prod_view/10914
+  제품: 세스코 스마트핏 데스크형 THE슬림 냉온정수기 (EWBD351)
+  패밀리: F01 정수
+  종합점수: 74 = (90 + 80 + 60 + 65) / 4
+
+  목표:
+    AI 자동생성 카드를 빌리조 기존 상세페이지 최상단에 푸시했을 때
+    어떻게 보일지 시뮬레이션. 기존 영역은 회색 박스 + 라벨로 추상화.
+
+  ⚠️ 카드 데이터는 룰북 F01 스키마에 맞춘 데모 추정값입니다.
+     실제 운영 시 cescomall.co.kr + prod.danawa.com 크롤로 재생성.
+-->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>빌리조 상세페이지 통합 미리보기 — 세스코 EWBD351</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  /* === 빌리조 디자인 토큰 (목업용 — 실제 환경에서는 글로벌 CSS) === */
+  :root{
+    --color-text-primary:#1a1a1a;
+    --color-text-secondary:#666;
+    --color-text-tertiary:#999;
+    --color-text-info:#0080d4;
+    --color-background-primary:#ffffff;
+    --color-background-secondary:#f5f7fa;
+    --color-background-info:#e6f3fb;
+    --color-border-tertiary:#e0e0e0;
+    --border-radius-md:8px;
+    --border-radius-lg:12px;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;background:#f0f2f5;margin:0;color:var(--color-text-primary)}
+
+  /* ===== 빌리조 페이지 컨테이너 시뮬레이션 ===== */
+  .billyjo-header{background:#fff;border-bottom:1px solid #e0e0e0;padding:14px 24px;position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between}
+  .billyjo-logo{font-weight:700;font-size:18px;letter-spacing:-0.5px}
+  .billyjo-logo span{color:var(--color-text-info)}
+  .billyjo-nav{font-size:12.5px;color:var(--color-text-secondary);display:flex;gap:18px}
+  .billyjo-nav span{cursor:pointer}
+
+  .billyjo-page{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+  .billyjo-breadcrumb{font-size:11.5px;color:var(--color-text-tertiary);margin-bottom:14px;letter-spacing:-0.2px}
+
+  /* ===== "기존 영역" 회색 placeholder ===== */
+  .placeholder{background:#fff;border:1px dashed #c0c4cc;border-radius:10px;padding:24px 20px;margin:14px 0;position:relative}
+  .placeholder-tag{position:absolute;top:-10px;left:14px;background:#888;color:#fff;font-size:10px;padding:3px 10px;border-radius:4px;font-weight:500;letter-spacing:0.2px}
+  .placeholder-title{font-size:13px;color:#888;font-weight:500;margin-bottom:8px;letter-spacing:-0.3px}
+  .placeholder-body{display:flex;gap:14px;color:#aaa;font-size:12px}
+  .placeholder-body .ph-img{width:120px;height:120px;background:#e8eaef;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa}
+  .placeholder-lines{flex:1;display:flex;flex-direction:column;gap:8px}
+  .ph-line{height:10px;background:#e8eaef;border-radius:3px}
+  .ph-line.w-90{width:90%}.ph-line.w-70{width:70%}.ph-line.w-50{width:50%}.ph-line.w-40{width:40%}.ph-line.w-60{width:60%}.ph-line.w-80{width:80%}
+
+  /* ===== AI 카드 ===== */
+  .ai-card-wrapper{position:relative;margin:14px 0}
+  .ai-card-tag{position:absolute;top:-10px;left:14px;background:var(--color-text-info);color:#fff;font-size:10px;padding:3px 10px;border-radius:4px;font-weight:500;letter-spacing:0.2px;display:flex;align-items:center;gap:4px;z-index:1}
+  .ai-card-tag::before{content:"✦";font-size:11px}
+
+  .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 22px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .name{font-size:15px;font-weight:500;line-height:1.4}
+  .meta{font-size:11.5px;color:var(--color-text-tertiary);margin-top:4px}
+  .summary{display:flex;align-items:center;gap:28px;padding:14px 8px}
+  .mgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;row-gap:12px;column-gap:24px}
+  .m{display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--color-text-info);flex-shrink:0}
+  .ml{font-size:12.5px;color:var(--color-text-secondary)}
+  .ms{font-size:14px;font-weight:500;margin-left:auto;color:var(--color-text-primary)}
+  .specs{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 8px}
+  .sc{text-align:center;padding:10px 4px}
+  .sl{font-size:11.5px;color:var(--color-text-secondary)}
+  .sv{font-size:14px;font-weight:500;color:var(--color-text-info);margin-top:5px}
+  .sec{padding-top:16px;margin-top:16px;border-top:0.5px solid var(--color-border-tertiary)}
+  .sec-t{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px}
+  .rec{font-size:11.5px;color:var(--color-text-secondary);margin-top:8px;line-height:1.55}
+  .persona{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .p{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:11px 12px}
+  .p-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .p-top i{font-size:18px;color:var(--color-text-info)}
+  .p-pct{font-size:14px;font-weight:500;color:var(--color-text-info)}
+  .p-t{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;line-height:1.35}
+  .p-d{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+  .step-h{display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-size:12.5px;color:var(--color-text-primary);font-weight:500}
+  .step-n{background:var(--color-text-info);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;flex-shrink:0}
+  .step-s{color:var(--color-text-secondary);font-size:11px;margin-left:auto;font-weight:400}
+  .field{margin:8px 0 10px;padding-left:26px}
+  .field-l{font-size:11.5px;color:var(--color-text-secondary);margin-bottom:6px}
+  .pills{display:flex;flex-wrap:wrap;gap:5px}
+  .pill{font-size:11px;padding:3px 9px;border-radius:999px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);background:transparent}
+  .pill.on{color:var(--color-text-info);background:var(--color-background-info);border-color:var(--color-background-info)}
+  .gift{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px}
+  .gift-r{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:5px 0;gap:12px}
+  .gift-l{color:var(--color-text-secondary);white-space:nowrap}
+  .gift-v{color:var(--color-text-primary);font-weight:500;text-align:right}
+  .gift-db{color:var(--color-text-info);font-size:11px;background:var(--color-background-info);padding:3px 10px;border-radius:6px;font-weight:500}
+
+  /* === 강조 === */
+  .m.top-metric .ms{color:var(--color-text-info);font-weight:600}
+  .badge-best{display:inline-block;font-size:9.5px;color:#fff;background:var(--color-text-info);padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:500;letter-spacing:-0.2px;vertical-align:1px;line-height:1.3}
+  .rec strong{color:var(--color-text-primary);font-weight:600;background:linear-gradient(transparent 62%,var(--color-background-info) 62%);padding:0 1px}
+  .gift-v strong{color:var(--color-text-info);font-weight:600}
+
+  /* === 데모 안내 박스 === */
+  .demo-banner{background:#fff8e6;border:1px solid #ffd966;border-radius:8px;padding:12px 16px;font-size:12px;color:#8a6d00;line-height:1.55;margin-bottom:14px}
+  .demo-banner strong{font-weight:600;color:#6b5400}
+  .demo-banner a{color:#0080d4;text-decoration:underline}
+
+  /* === 모바일 (≤600px) === */
+  @media (max-width:600px){
+    .billyjo-header{padding:12px 14px}
+    .billyjo-logo{font-size:16px}
+    .billyjo-nav{font-size:11.5px;gap:12px}
+    .billyjo-page{padding:14px 12px 40px}
+    .placeholder{padding:20px 14px}
+    .placeholder-body{flex-direction:column;gap:10px}
+    .placeholder-body .ph-img{width:100%;height:140px}
+
+    .card{padding:16px}
+    .head{padding-bottom:10px}
+    .name{font-size:16px;line-height:1.35}
+    .meta{font-size:11px;word-break:keep-all;line-height:1.5}
+    .summary{gap:14px;padding:14px 2px}
+    .mgrid{column-gap:10px;row-gap:11px}
+    .ml{font-size:12px}
+    .ms{font-size:14.5px}
+    .specs{grid-template-columns:1fr 1fr;padding:10px 4px}
+    .sc{padding:8px 2px}
+    .sl{font-size:11px}
+    .sv{font-size:13.5px}
+    .sec{padding-top:14px;margin-top:14px}
+    .sec-t{font-size:13px}
+    .rec{font-size:12px;line-height:1.6}
+    .persona{grid-template-columns:1fr;gap:6px}
+    .p{padding:11px 13px}
+    .p-t{font-size:12.5px}
+    .p-d{font-size:11.5px}
+    .field{padding-left:22px;margin:6px 0 8px}
+    .field-l{font-size:11px;line-height:1.45}
+    .pill{font-size:11px;padding:3px 8px}
+    .step-h{margin:14px 0 4px;font-size:12.5px}
+    .gift{padding:10px 12px}
+    .gift-r{font-size:12px;flex-wrap:wrap;row-gap:3px}
+    .gift-v{font-size:12px}
+    .gift-db{font-size:10.5px;padding:3px 9px}
+    .badge-best{font-size:9px;padding:1px 5px}
+    .demo-banner{font-size:11.5px;padding:10px 12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 빌리조 글로벌 헤더 (시뮬레이션) ==================== -->
+<div class="billyjo-header">
+  <div class="billyjo-logo">billy<span>jo</span></div>
+  <div class="billyjo-nav"><span>전체상품</span><span>이벤트</span><span>고객센터</span><span>마이</span></div>
+</div>
+
+<div class="billyjo-page">
+
+  <div class="billyjo-breadcrumb">홈 &gt; 정수기 &gt; 데스크형 정수기 &gt; 세스코</div>
+
+  <div class="demo-banner">
+    <strong>📍 통합 미리보기</strong> — 실제 페이지(<a href="https://www.billyjo.co.kr/html/dh_prod/prod_view/10914" target="_blank">prod_view/10914</a>) 상단에 AI 카드를 푸시했을 때의 모습입니다.
+    회색 점선 박스는 기존 빌리조 영역(이미지·가격박스·상세설명)을 추상화한 것이고, 파란 ✦ 마크 영역이 GTM으로 새로 삽입되는 카드입니다.
+  </div>
+
+  <!-- ==================== 🆕 AI 자동생성 카드 (페이지 최상단·전폭) ==================== -->
+  <div class="ai-card-wrapper">
+    <div class="ai-card-tag">AI 자동생성 카드 · 신규 영역</div>
+
+    <div class="card">
+      <!-- SLOT 1: 헤더 -->
+      <div class="head">
+        <div>
+          <div class="name">세스코 스마트핏 데스크형 THE슬림 냉온정수기</div>
+          <div class="meta">EWBD351 · 데스크형 · 4개월 방문관리 · 230×517×510mm</div>
+        </div>
+      </div>
+
+      <!-- SLOT 2: 게이지 + 4지표 — 종합점수 74 → dasharray = 122 165 -->
+      <div class="summary">
+        <svg viewBox="0 0 100 100" width="92" height="92" style="display:block;flex-shrink:0">
+          <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--color-border-tertiary)" stroke-width="6" stroke-linecap="round"/>
+          <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--color-text-info)" stroke-width="6" stroke-linecap="round" stroke-dasharray="122 165"/>
+          <text x="50" y="46" text-anchor="middle" font-size="9.5" fill="var(--color-text-secondary)" style="font-family:inherit">종합점수</text>
+          <text x="50" y="65" text-anchor="middle" font-size="20" font-weight="500" fill="var(--color-text-primary)" style="font-family:inherit">74</text>
+        </svg>
+        <div class="mgrid">
+          <div class="m top-metric"><span class="dot"></span><span class="ml">렌탈료</span><span class="ms">90</span><span class="badge-best">최고점</span></div>
+          <div class="m"><span class="dot"></span><span class="ml">정수성능</span><span class="ms">80</span></div>
+          <div class="m"><span class="dot"></span><span class="ml">위생관리</span><span class="ms">60</span></div>
+          <div class="m"><span class="dot"></span><span class="ml">편의기능</span><span class="ms">65</span></div>
+        </div>
+      </div>
+
+      <!-- SLOT 3: 6칸 스펙요약 -->
+      <div class="specs">
+        <div class="sc"><div class="sl">렌탈료</div><div class="sv">월 17,900원</div></div>
+        <div class="sc"><div class="sl">필터종류</div><div class="sv">UF 중공사막</div></div>
+        <div class="sc"><div class="sl">필터개수</div><div class="sv">4개</div></div>
+        <div class="sc"><div class="sl">편의기능</div><div class="sv">3개</div></div>
+        <div class="sc"><div class="sl">관리주기</div><div class="sv">4개월 방문</div></div>
+        <div class="sc"><div class="sl">제품유형</div><div class="sv">데스크형</div></div>
+      </div>
+
+      <!-- SLOT 4: 기본정보 -->
+      <div class="sec">
+        <div class="sec-t">기본정보 · 설치 형태</div>
+        <div class="pills">
+          <span class="pill on">데스크형 (저수조)</span>
+          <span class="pill">스탠드형</span>
+          <span class="pill">언더싱크</span>
+          <span class="pill">직수형</span>
+        </div>
+        <div class="rec"><strong>월 17,900원</strong> 60개월 약정 · <strong>230mm 슬림</strong> 컴팩트 · <strong>4개월 코디 방문관리</strong> 포함 — 좁은 주방 1인 가구·시니어 가구에 추천.</div>
+      </div>
+
+      <!-- SLOT 5: 구독자 Top3 -->
+      <div class="sec">
+        <div class="sec-t">구독자 Top3</div>
+        <div class="persona">
+          <div class="p">
+            <div class="p-top"><i class="ti ti-home" aria-hidden="true"></i><span class="p-pct">36%</span></div>
+            <div class="p-t">좁은 주방 1인 가구</div>
+            <div class="p-d">230mm 슬림 데스크형으로 협소한 공간에 설치하는 자취·신혼</div>
+          </div>
+          <div class="p">
+            <div class="p-top"><i class="ti ti-armchair" aria-hidden="true"></i><span class="p-pct">28%</span></div>
+            <div class="p-t">방문관리 선호 시니어</div>
+            <div class="p-d">4개월 코디 방문관리로 자가관리 부담 없는 60대+</div>
+          </div>
+          <div class="p">
+            <div class="p-top"><i class="ti ti-heart" aria-hidden="true"></i><span class="p-pct">16%</span></div>
+            <div class="p-t">가성비 우선 신혼</div>
+            <div class="p-d">월 17,900원대 합리 가격을 선호하는 2030 신혼·1인 가구</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLOT 6: 상세 스펙 Step 1-3 -->
+      <div class="sec">
+        <div class="sec-t">상세 스펙</div>
+
+        <!-- Step 1 -->
+        <div class="step-h"><span class="step-n">1</span>정수성능<span class="step-s">80점</span></div>
+        <div class="field">
+          <div class="field-l">정수 기능 (3가지)</div>
+          <div class="pills">
+            <span class="pill on">냉수</span>
+            <span class="pill on">온수</span>
+            <span class="pill on">정수</span>
+            <span class="pill">얼음</span>
+            <span class="pill">탄산</span>
+            <span class="pill">살균수</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">필터 종류 (4단계)</div>
+          <div class="pills">
+            <span class="pill">RO 역삼투압</span>
+            <span class="pill">나노트랩</span>
+            <span class="pill on">UF 중공사막</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">필터 개수</div>
+          <div class="pills">
+            <span class="pill">1개</span>
+            <span class="pill">2개</span>
+            <span class="pill">3개</span>
+            <span class="pill on">4개+</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-h"><span class="step-n">2</span>위생관리<span class="step-s">60점</span></div>
+        <div class="field">
+          <div class="field-l">살균 방식 · 능동 살균 미명시 (4개월 방문관리로 대체)</div>
+          <div class="pills">
+            <span class="pill">UV살균</span>
+            <span class="pill">자동살균</span>
+            <span class="pill">고온살균</span>
+            <span class="pill">전해수살균</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">위생 관리 (1가지)</div>
+          <div class="pills">
+            <span class="pill on">4개월 코디 방문관리</span>
+            <span class="pill">분리세척</span>
+            <span class="pill">무빙코크</span>
+            <span class="pill">자동잔수비움</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">저수조 재질 · PP 항균 (저수조형)</div>
+          <div class="pills">
+            <span class="pill">스테인리스</span>
+            <span class="pill">트라이탄</span>
+            <span class="pill on">PP</span>
+            <span class="pill">폴리케톤</span>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-h"><span class="step-n">3</span>편의기능<span class="step-s">65점</span></div>
+        <div class="field">
+          <div class="field-l">조작 기능 (1가지)</div>
+          <div class="pills">
+            <span class="pill">IoT</span>
+            <span class="pill">음성안내</span>
+            <span class="pill on">정량출수</span>
+            <span class="pill">맞춤출수</span>
+            <span class="pill">온수온도조절</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">부가 기능 (1가지)</div>
+          <div class="pills">
+            <span class="pill on">필터교환알림</span>
+            <span class="pill">디스플레이</span>
+            <span class="pill">자가진단</span>
+            <span class="pill">야간빛감지</span>
+            <span class="pill">필터직접교체</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLOT 7: 예상 최대 지원금ㆍ빌리조 혜택 -->
+      <div class="sec">
+        <div class="sec-t">예상 최대 지원금ㆍ빌리조 혜택</div>
+        <div class="gift">
+          <div class="gift-r"><span class="gift-l">예상 최대 지원금</span><span class="gift-db">내부 DB 연동 예정</span></div>
+          <div class="gift-r"><span class="gift-l">빌리조 혜택</span><span class="gift-v"><strong>초기비용 0원</strong> + 렌탈기간 무상 A/S</span></div>
+          <div class="gift-r"><span class="gift-l">제조사 프로모션</span><span class="gift-v">롯데카드 <strong>월 최대 25,000원 청구할인</strong> + 4개월 코디 방문관리 포함</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ==================== 🆕 AI 카드 끝 ==================== -->
+
+
+  <!-- ==================== 이하 기존 빌리조 페이지 영역 (placeholder) ==================== -->
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 제품 이미지 갤러리</div>
+    <div class="placeholder-body">
+      <div class="ph-img">대표 이미지</div>
+      <div class="placeholder-lines">
+        <div class="ph-line w-90"></div>
+        <div class="ph-line w-70"></div>
+        <div class="ph-line w-50"></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <div style="width:48px;height:48px;background:#e8eaef;border-radius:4px"></div>
+          <div style="width:48px;height:48px;background:#e8eaef;border-radius:4px"></div>
+          <div style="width:48px;height:48px;background:#e8eaef;border-radius:4px"></div>
+          <div style="width:48px;height:48px;background:#e8eaef;border-radius:4px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 렌탈료ㆍ카드할인 박스</div>
+    <div class="placeholder-title">월 17,900원 / 60개월 약정</div>
+    <div class="placeholder-lines" style="gap:6px">
+      <div class="ph-line w-40"></div>
+      <div class="ph-line w-60"></div>
+      <div class="ph-line w-50"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <div style="flex:1;height:36px;background:#0080d4;opacity:0.15;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#0080d4;font-weight:500">렌탈 신청</div>
+        <div style="flex:1;height:36px;background:#e8eaef;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa">장바구니</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 제품 기본정보</div>
+    <div class="placeholder-title">브랜드 · 방식 · 타입 · 관리</div>
+    <div class="placeholder-lines" style="gap:6px">
+      <div class="ph-line w-80"></div>
+      <div class="ph-line w-90"></div>
+      <div class="ph-line w-60"></div>
+    </div>
+  </div>
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 렌탈사 비교 / 제휴카드 안내</div>
+    <div class="placeholder-lines" style="gap:6px">
+      <div class="ph-line w-90"></div>
+      <div class="ph-line w-70"></div>
+      <div class="ph-line w-80"></div>
+    </div>
+  </div>
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 상품정보 (상세설명 이미지)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+      <div style="aspect-ratio:1;background:#e8eaef;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa">상세 이미지</div>
+      <div style="aspect-ratio:1;background:#e8eaef;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa">상세 이미지</div>
+      <div style="aspect-ratio:1;background:#e8eaef;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa">상세 이미지</div>
+      <div style="aspect-ratio:1;background:#e8eaef;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa">상세 이미지</div>
+    </div>
+  </div>
+
+  <div class="placeholder">
+    <div class="placeholder-tag">기존: 고객센터ㆍ렌탈 주문혜택 10가지</div>
+    <div class="placeholder-lines" style="gap:6px">
+      <div class="ph-line w-50"></div>
+      <div class="ph-line w-90"></div>
+      <div class="ph-line w-70"></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

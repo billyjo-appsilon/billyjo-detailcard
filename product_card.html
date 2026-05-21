@@ -1,0 +1,204 @@
+<!--
+  billyjo.co.kr 제품 상세페이지 카드 — HTML 레퍼런스 템플릿
+  ============================================================
+  
+  ✦ 이 파일은 그대로 렌더링되는 working example입니다.
+  ✦ 새 제품 카드를 만들 때 이 구조를 복제하고 [REPLACE: ...] 표시된 부분만 교체하세요.
+  ✦ CSS 변수, 클래스명, SVG 게이지 공식, 슬롯 순서는 변경 금지 (CLAUDE.md 절대 규칙 참조).
+  ✦ 현재 예시 데이터: 삼성 AF80F25D29WRS (F03 공조, 종합점수 90).
+  
+  슬롯 순서 (절대 변경 금지):
+    1. 헤더 (.head)
+    2. 게이지 + 4지표 (.summary)
+    3. 6칸 스펙요약 (.specs)
+    4. 기본정보 (.sec — 첫 번째)
+    5. 주요 구독자 구성 Top 3 (.sec + .persona)
+    6. 상세 스펙 Step 1-3 (.sec + .step-h)
+    7. 예상 지원금·사은품 (.sec + .gift)
+-->
+
+<style>
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 22px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.name{font-size:15px;font-weight:500;line-height:1.4}
+.meta{font-size:11.5px;color:var(--color-text-tertiary);margin-top:4px}
+.summary{display:flex;align-items:center;gap:28px;padding:14px 8px}
+.mgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;row-gap:12px;column-gap:24px}
+.m{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--color-text-info);flex-shrink:0}
+.ml{font-size:12.5px;color:var(--color-text-secondary)}
+.ms{font-size:14px;font-weight:500;margin-left:auto;color:var(--color-text-primary)}
+.specs{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 8px}
+.sc{text-align:center;padding:10px 4px}
+.sl{font-size:11.5px;color:var(--color-text-secondary)}
+.sv{font-size:14px;font-weight:500;color:var(--color-text-info);margin-top:5px}
+.sec{padding-top:16px;margin-top:16px;border-top:0.5px solid var(--color-border-tertiary)}
+.sec-t{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px}
+.rec{font-size:11.5px;color:var(--color-text-secondary);margin-top:8px;line-height:1.55}
+.persona{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.p{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:11px 12px}
+.p-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.p-top i{font-size:18px;color:var(--color-text-info)}
+.p-pct{font-size:14px;font-weight:500;color:var(--color-text-info)}
+.p-t{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;line-height:1.35}
+.p-d{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.step-h{display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-size:12.5px;color:var(--color-text-primary);font-weight:500}
+.step-n{background:var(--color-text-info);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;flex-shrink:0}
+.step-s{color:var(--color-text-secondary);font-size:11px;margin-left:auto;font-weight:400}
+.field{margin:8px 0 10px;padding-left:26px}
+.field-l{font-size:11.5px;color:var(--color-text-secondary);margin-bottom:6px}
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pill{font-size:11px;padding:3px 9px;border-radius:999px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);background:transparent}
+.pill.on{color:var(--color-text-info);background:var(--color-background-info);border-color:var(--color-background-info)}
+.gift{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px}
+.gift-r{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:5px 0;gap:12px}
+.gift-l{color:var(--color-text-secondary);white-space:nowrap}
+.gift-v{color:var(--color-text-primary);font-weight:500;text-align:right}
+.gift-db{color:var(--color-text-info);font-size:11px;background:var(--color-background-info);padding:3px 10px;border-radius:6px;font-weight:500}
+</style>
+
+<div class="card">
+
+  <!-- ============ SLOT 1: 헤더 ============ -->
+  <!-- [REPLACE: name] 제품명 (브랜드 + 모델명) -->
+  <!-- [REPLACE: meta] 모델번호 · 형태 · 핵심 메타 -->
+  <div class="head">
+    <div>
+      <div class="name">삼성 비스포크 AI 무풍콤보 갤러리 2in1</div>
+      <div class="meta">AF80F25D29WRS · 2in1 홈멀티 · 81.8/18.7㎡ (25평+6평) · 1등급</div>
+    </div>
+  </div>
+
+  <!-- ============ SLOT 2: 게이지 + 4지표 ============ -->
+  <!-- [REPLACE: dasharray] {score × 1.65} 165 (예: 90점 → 149 165) -->
+  <!-- [REPLACE: score-text] 종합점수 숫자 -->
+  <!-- [REPLACE: 4지표 라벨·점수] 카테고리 패밀리별 4지표 (룰북 참조) -->
+  <div class="summary">
+    <svg viewBox="0 0 100 100" width="92" height="92" style="display:block;flex-shrink:0">
+      <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--color-border-tertiary)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--color-text-info)" stroke-width="6" stroke-linecap="round" stroke-dasharray="149 165"/>
+      <text x="50" y="46" text-anchor="middle" font-size="9.5" fill="var(--color-text-secondary)" style="font-family:inherit">종합점수</text>
+      <text x="50" y="65" text-anchor="middle" font-size="20" font-weight="500" fill="var(--color-text-primary)" style="font-family:inherit">90</text>
+    </svg>
+    <div class="mgrid">
+      <div class="m"><span class="dot"></span><span class="ml">가격대</span><span class="ms">70</span></div>
+      <div class="m"><span class="dot"></span><span class="ml">냉방·제습</span><span class="ms">96</span></div>
+      <div class="m"><span class="dot"></span><span class="ml">공기청정·위생</span><span class="ms">95</span></div>
+      <div class="m"><span class="dot"></span><span class="ml">AI·편의기능</span><span class="ms">98</span></div>
+    </div>
+  </div>
+
+  <!-- ============ SLOT 3: 6칸 스펙요약 ============ -->
+  <!-- [REPLACE: 6개 라벨·값] 카테고리 패밀리별 6스펙 (룰북 참조) -->
+  <div class="specs">
+    <div class="sc"><div class="sl">가격대</div><div class="sv">500만원대</div></div>
+    <div class="sc"><div class="sl">적용면적</div><div class="sv">25+6평</div></div>
+    <div class="sc"><div class="sl">에너지등급</div><div class="sv">1등급</div></div>
+    <div class="sc"><div class="sl">필터</div><div class="sv">e-HEPA·PM1.0</div></div>
+    <div class="sc"><div class="sl">살균방식</div><div class="sv">UV LED</div></div>
+    <div class="sc"><div class="sl">제품유형</div><div class="sv">2in1 홈멀티</div></div>
+  </div>
+
+  <!-- ============ SLOT 4: 기본정보 · 설치 형태 ============ -->
+  <!-- [REPLACE: pills] 제품 유형 옵션, .pill.on은 해당 제품에 맞는 옵션 -->
+  <!-- [REPLACE: rec] 1줄 추천 가이드 (타겟 평형·가구 구성 등) -->
+  <div class="sec">
+    <div class="sec-t">기본정보 · 설치 형태</div>
+    <div class="pills"><span class="pill">스탠드 단독</span><span class="pill">벽걸이 단독</span><span class="pill on">2in1 홈멀티</span></div>
+    <div class="rec">거실(25평)과 자녀방·작은방(6평)을 한 번에 시원하게 하고 싶은 25-30평대 아파트에 적합합니다. 일반/선매립 배관 모두 호환됩니다.</div>
+  </div>
+
+  <!-- ============ SLOT 5: 주요 구독자 구성 (Top 3) ============ -->
+  <!-- [REPLACE: 3개 페르소나 카드] Tabler 아이콘(ti-*) + 구성비% + 이름 + 설명 -->
+  <!-- ⚠️ 정확히 Top 3. 1개도 4개도 금지. -->
+  <div class="sec">
+    <div class="sec-t">주요 구독자 구성 (Top 3)</div>
+    <div class="persona">
+      <div class="p">
+        <div class="p-top"><i class="ti ti-home" aria-hidden="true"></i><span class="p-pct">38%</span></div>
+        <div class="p-t">30평대 4인 가족</div>
+        <div class="p-d">거실과 자녀방을 동시에 냉방해야 하는 다인 가구</div>
+      </div>
+      <div class="p">
+        <div class="p-top"><i class="ti ti-leaf" aria-hidden="true"></i><span class="p-pct">24%</span></div>
+        <div class="p-t">알러지·호흡기 민감 가족</div>
+        <div class="p-d">e-HEPA·PM1.0과 BAF 인증으로 미세먼지 안심하는 가족</div>
+      </div>
+      <div class="p">
+        <div class="p-top"><i class="ti ti-device-mobile" aria-hidden="true"></i><span class="p-pct">18%</span></div>
+        <div class="p-t">스마트홈 30-40대</div>
+        <div class="p-d">스마트싱스와 Bixby로 삼성 가전을 통합 제어하는 사용자</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLOT 6: 상세 스펙 Step 1-3 ============ -->
+  <!-- Step 1-3 제목·점수·field·pill은 카테고리 패밀리 룰북을 따른다 (룰북 참조) -->
+  <!-- ⚠️ Step은 정확히 3개. 2개도 4개도 금지. 각 Step에 점수 표시. -->
+  <div class="sec">
+    <div class="sec-t">상세 스펙</div>
+
+    <!-- ─── Step 1 ─── -->
+    <div class="step-h"><span class="step-n">1</span>냉방·제습 성능<span class="step-s">96점</span></div>
+    <div class="field"><div class="field-l">냉방 방식 (4가지)</div><div class="pills"><span class="pill on">무풍</span><span class="pill on">하이패스 서큘냉방</span><span class="pill on">쾌적제습</span><span class="pill on">일반 냉방</span></div></div>
+    <div class="field"><div class="field-l">무풍홀 약 27만 개 · 최소 30dB 저소음 · 0.15m/s 이하 (ASHRAE 기준)</div><div class="pills"><span class="pill on">3D 와이드 무풍</span><span class="pill on">서큘레이터팬</span></div></div>
+    <div class="field"><div class="field-l">에너지 효율 (무풍 시 MAX 대비 최대 90% 절약)</div><div class="pills"><span class="pill on">1등급</span><span class="pill">2등급</span><span class="pill">3등급</span></div></div>
+
+    <!-- ─── Step 2 ─── -->
+    <div class="step-h"><span class="step-n">2</span>공기청정·위생<span class="step-s">95점</span></div>
+    <div class="field"><div class="field-l">필터 종류 (3개) · 0.3㎛ 99.95% 제거</div><div class="pills"><span class="pill on">e-HEPA</span><span class="pill on">PM1.0</span><span class="pill on">항균구리 극세</span><span class="pill">기본 극세</span></div></div>
+    <div class="field"><div class="field-l">살균·제균 (4가지) · 바람팬·서큘레이터팬·열교환기</div><div class="pills"><span class="pill on">UV LED 99.9%</span><span class="pill on">워시클린 90%</span><span class="pill on">고온 자동건조</span><span class="pill on">맞춤 건조</span></div></div>
+    <div class="field"><div class="field-l">인증 (2개) · 대장균 99.5% · 황색포도상구균 99.3%</div><div class="pills"><span class="pill on">BAF 알러젠 인증</span><span class="pill on">KTL 공간제균</span></div></div>
+
+    <!-- ─── Step 3 ─── -->
+    <div class="step-h"><span class="step-n">3</span>AI·편의기능<span class="step-s">98점</span></div>
+    <div class="field"><div class="field-l">AI 기능 (5개)</div><div class="pills"><span class="pill on">AI 쾌적</span><span class="pill on">AI 에너지절약 30%</span><span class="pill on">AI 환기알림</span><span class="pill on">AI 진단</span><span class="pill on">부재감지 절전</span></div></div>
+    <div class="field"><div class="field-l">조작 기능 (4개)</div><div class="pills"><span class="pill on">Bixby 음성인식</span><span class="pill on">스마트싱스 IoT</span><span class="pill on">Always on Display</span><span class="pill on">리모컨</span></div></div>
+    <div class="field"><div class="field-l">부가 기능 (3개) · 이지케어 8단계</div><div class="pills"><span class="pill on">이지오픈 패널</span><span class="pill on">워셔블 필터</span><span class="pill on">홈케어 매니저</span></div></div>
+  </div>
+
+  <!-- ============ SLOT 7: 예상 지원금·사은품 ============ -->
+  <!-- ⚠️ 정확히 3행 (지원금 / AI 사은품 / 제조사 프로모션). 1박스 통합 금지. -->
+  <!-- [REPLACE: gift-db] 내부 DB 연동 placeholder — GTM이 /api/subsidy/{id}로 채움 -->
+  <!-- [REPLACE: gift-v 2개] AI 예측 사은품 / 제조사 프로모션 -->
+  <div class="sec">
+    <div class="sec-t">예상 지원금ㆍ사은품</div>
+    <div class="gift">
+      <div class="gift-r"><span class="gift-l">예상 지원금</span><span class="gift-db">내부 DB 연동 예정</span></div>
+      <div class="gift-r"><span class="gift-l">예상 사은품 (AI)</span><span class="gift-v">삼성 멤버십 포인트 + 평생보증</span></div>
+      <div class="gift-r"><span class="gift-l">제조사 프로모션</span><span class="gift-v">1등급 가전 10% 환급 + AI 구독클럽 구독케어</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!--
+  ============ 페이지 내 배치 사양 ============
+  
+  본 카드는 제품 상세페이지의 최상단·전폭(full-width)에 위치합니다.
+  GTM에서 다음과 같이 삽입:
+  
+    <div id="product-detail-page">
+      <div id="ai-product-card" data-product-id="{{id}}"></div>  ← 본 카드가 여기 채워짐
+      <div class="product-images">...</div>                       ← 기존 이미지 갤러리
+      <div class="purchase-info">...</div>                        ← 기존 구매 박스
+      <div class="product-description">...</div>                  ← 기존 설명/스펙/후기
+    </div>
+  
+  ============ Tabler Icons 의존성 ============
+  
+  페르소나 카드의 <i class="ti ti-*"> 아이콘은 Tabler Icons CDN이 페이지에 로드되어 있어야 표시됩니다.
+  빌리조 페이지 헤더에 다음 CDN이 이미 있는지 확인:
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  
+  자주 쓰는 아이콘:
+    ti-home          가구 구성 (4인 가족, 다인 가구)
+    ti-leaf          알러지·호흡기 민감, 친환경
+    ti-device-mobile 스마트홈·IoT
+    ti-heart         신혼·디자인 중시
+    ti-shield-check  위생 민감·영유아
+    ti-baby          영유아 동반
+    ti-paw           펫 보유
+    ti-coffee        홈카페·홈쿠킹
+    ti-armchair      시니어
+-->

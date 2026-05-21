@@ -1,0 +1,494 @@
+<!--
+  billyjo.co.kr 제품 상세페이지 카드 — F08 영상·디지털 샘플 (v0.2.3)
+  ================================================================
+  제품: LG gram Pro 16 (16Z90SP-KA7VK)
+  패밀리: F08 영상·디지털 (노트북)
+  점수 산출: (82 + 92 + 88 + 90) / 4 = 88점 → 종합 A+ (적극추천)
+
+  v0.2.3 절대 규칙 #1~#19 전체 적용. 룰북 F08 4지표·6스펙·Step 1-3 스키마 사용.
+  Step 명칭은 F08 표준(화질·성능 / 연결성·OS / AI·편의) 유지하되 노트북 컨텍스트로 field 라벨 조정.
+
+  ⚠️ 데모 — 실제 운영 시 lge.co.kr 스펙 표 + prod.danawa.com 크롤 후
+     source_url + quoted_text + confidence 부여한 데이터로 재생성.
+-->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>샘플 v0.2.3 — LG gram Pro 16</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  /* === 빌리조 디자인 토큰 === */
+  :root{
+    --color-text-primary:#2a2a2a;
+    --color-text-secondary:#6a6a6a;
+    --color-text-tertiary:#999;
+    --color-text-info:#0838F8;
+    --color-background-primary:#ffffff;
+    --color-background-secondary:#f7f7f7;
+    --color-background-info:#e8edff;
+    --color-border-tertiary:#dfdfdf;
+    --border-radius-md:8px;
+    --border-radius-lg:12px;
+
+    /* === 등급 컬러 팔레트 (절대 규칙 #13) === */
+    --g-1:#0838F8;     /* S 최고 */
+    --g-1-5:#1a87ac;   /* A+ 적극추천 */
+    --g-2:#16a34a;     /* A 추천 */
+    --g-2-5:#4ec727;   /* B+ 우수 */
+    --g-3:#84cc16;     /* B 좋음 */
+    --g-3-5:#c2ce15;   /* C+ 적합 */
+    --g-4:#facc15;     /* C 보통 */
+    --g-d:#999;        /* 평가 없음 */
+  }
+  body{font-family:'Pretendard','Apple SD Gothic Neo','맑은 고딕',sans-serif;background:#f7f7f7;padding:24px;max-width:760px;margin:0 auto;color:var(--color-text-primary);-webkit-font-smoothing:antialiased}
+
+  #ai-card-root{position:relative;margin-top:14px}
+
+  /* ===== #18: 카드 라벨 ===== */
+  #ai-card-root .ai-card-tag{
+    position:absolute;top:-1px;left:34px;
+    background:var(--color-text-info);color:#fff;
+    font-size:11px;padding:3px 9px;border-radius:5px;
+    font-family:'Pretendard',sans-serif;font-weight:700;
+    letter-spacing:0.2px;z-index:1;line-height:1.3;
+  }
+  #ai-card-root .ai-card-tag::before{content:"📊 ";font-size:12px}
+
+  .card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:22px 22px 18px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+  .name{font-size:15px;font-weight:500;line-height:1.4}
+  .meta{font-size:11.5px;color:var(--color-text-tertiary);margin-top:4px}
+  .model-num{color:var(--color-text-info);font-family:'Pretendard',sans-serif;font-weight:700}
+
+  /* ===== SLOT 2: 게이지 + 4지표 ===== */
+  .summary{display:flex;align-items:center;gap:28px;padding:14px 8px}
+  .mgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;row-gap:12px;column-gap:18px}
+  .m{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:4px 0}
+  .ml{font-size:11.5px;color:var(--color-text-secondary)}
+  .grade-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:6px;color:#fff;font-family:'Pretendard',sans-serif;font-weight:700;line-height:1.2}
+  .grade-badge small{font-size:78%;opacity:0.85;font-weight:700;padding-left:6px;border-left:1px solid rgba(255,255,255,0.5);margin-left:2px}
+  .g-S{background:var(--g-1)}
+  .g-Aplus{background:var(--g-1-5)}
+  .g-A{background:var(--g-2)}
+  .g-Bplus{background:var(--g-2-5)}
+  .g-B{background:var(--g-3)}
+  .g-Cplus{background:var(--g-3-5)}
+  .g-C{background:var(--g-4);color:#5d4d00}
+  .g-C small{border-left-color:rgba(93,77,0,0.4)}
+  .g-d{background:var(--g-d);font-size:11px;font-family:'Pretendard',sans-serif;font-weight:700;padding:4px 10px;border-radius:6px;color:#fff}
+
+  /* ===== SLOT 3: 6스펙 ===== */
+  .specs{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 8px}
+  .sc{text-align:center;padding:10px 4px;position:relative}
+  .sl{font-size:11.5px;color:var(--color-text-secondary);font-family:'Pretendard',sans-serif;font-weight:700;display:inline-flex;align-items:center;gap:3px;justify-content:center}
+  .sv{font-size:14px;font-family:'Pretendard',sans-serif;font-weight:700;color:var(--color-text-info);margin-top:5px}
+
+  /* ===== #14: ⓘ 툴팁 ===== */
+  .help{display:inline-block;position:relative}
+  .help summary{list-style:none;cursor:pointer;font-size:11px;color:var(--color-text-tertiary);padding:0 2px;border-radius:50%}
+  .help summary::-webkit-details-marker{display:none}
+  .help summary::after{content:"ⓘ"}
+  .help[open] summary{color:var(--color-text-info)}
+  .help[open] .help-pop{display:block}
+  .help-pop{display:none;position:absolute;left:50%;top:140%;transform:translateX(-50%);background:#fff;border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--color-text-primary);width:220px;line-height:1.5;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.08);text-align:left;font-weight:400}
+
+  /* ===== SLOT 4: 기본정보 + 핵심 강점 ===== */
+  .sec{padding-top:16px;margin-top:16px;border-top:0.5px solid var(--color-border-tertiary)}
+  .sec-t{font-size:13px;color:var(--color-text-primary);margin-bottom:10px;font-family:'Pretendard',sans-serif;font-weight:700}
+  .rec{font-size:11.5px;color:var(--color-text-secondary);margin-top:8px;line-height:1.55}
+  .pills{display:flex;flex-wrap:wrap;gap:5px}
+  .pill{font-size:11px;padding:3px 9px;border-radius:999px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary);background:transparent}
+  .pill.on{color:var(--color-text-info);background:var(--color-background-info);border-color:var(--color-background-info)}
+
+  /* ===== #15: 핵심 강점 칩 ===== */
+  .strengths{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .strength-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:5px 10px;border-radius:6px;background:var(--color-background-info);color:var(--color-text-info);font-family:'Pretendard',sans-serif;font-weight:700;line-height:1.3}
+  .strength-chip i{font-size:13px}
+
+  /* ===== SLOT 5: 페르소나 Top 3 (5요소) ===== */
+  .persona{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .p{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:11px 12px;display:flex;flex-direction:column;gap:6px}
+  .p-top{display:flex;align-items:center;justify-content:space-between}
+  .p-top i{font-size:18px;color:var(--color-text-info)}
+  .rec-p-level-1,.rec-p-level-2,.rec-p-level-3{font-size:10.5px;padding:2px 7px;border-radius:4px;color:#fff;font-family:'Pretendard',sans-serif;font-weight:700;letter-spacing:-0.2px;line-height:1.3}
+  .rec-p-level-1{background:var(--g-1)}
+  .rec-p-level-2{background:var(--g-1-5)}
+  .rec-p-level-3{background:var(--g-2-5)}
+  .rec-p-title{font-size:12px;color:var(--color-text-primary);line-height:1.35;font-family:'Pretendard',sans-serif;font-weight:700}
+  .p-d{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+  .feat-btns{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+  .feat-btn{font-size:10.5px;padding:3px 7px;border-radius:4px;background:#fff;color:var(--color-text-info);border:0.5px solid var(--color-background-info);font-family:'Pretendard',sans-serif;font-weight:700}
+
+  /* ===== SLOT 6: 상세 스펙 Step 1-3 + 자세히 보기 접기 ===== */
+  .step-h{display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-size:12.5px;color:var(--color-text-primary)}
+  .step-n{background:var(--color-text-info);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;flex-shrink:0}
+  .step-title{font-family:'Pretendard',sans-serif;font-weight:700}
+  .step-sum{font-size:11.5px;color:var(--color-text-secondary);line-height:1.55;padding-left:26px;margin:4px 0 6px}
+  .step-sum strong{color:var(--color-text-primary);background:linear-gradient(transparent 62%,var(--color-background-info) 62%);padding:0 1px;font-family:'Pretendard',sans-serif;font-weight:700}
+
+  .step-details{padding-left:26px}
+  .step-details summary{list-style:none;cursor:pointer;font-size:11px;color:var(--color-text-info);margin:2px 0 8px;display:inline-flex;align-items:center;gap:3px}
+  .step-details summary::-webkit-details-marker{display:none}
+  .step-details summary::after{content:"▾";font-size:10px;transition:transform 0.15s}
+  .step-details[open] summary::after{transform:rotate(180deg)}
+  .field{margin:8px 0 10px}
+  .field-l{font-size:11.5px;color:var(--color-text-secondary);margin-bottom:6px}
+
+  /* ===== SLOT 7: 사은품 박스 + .gift-tag ===== */
+  .gift{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px}
+  .gift-r{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;gap:12px}
+  .gift-tag{font-size:11px;padding:4px 10px;border-radius:5px;color:var(--color-text-info);background:var(--color-background-info);font-family:'Pretendard',sans-serif;font-weight:700;white-space:nowrap;line-height:1.3}
+  .gift-v{color:var(--color-text-primary);text-align:right;line-height:1.5}
+  .gift-v strong{color:var(--color-text-info);font-family:'Pretendard',sans-serif;font-weight:700}
+  .gift-db{color:var(--color-text-tertiary);font-size:11px;background:#fff;border:0.5px dashed var(--color-border-tertiary);padding:3px 10px;border-radius:6px}
+
+  /* === 데모 안내 === */
+  .demo-note{background:#fff8e6;border:1px solid #ffd966;border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:12px;color:#8a6d00;line-height:1.5}
+
+  /* ===== #19: 모바일 (≤600px) ===== */
+  @media (max-width:600px){
+    .card, .card *{word-break:keep-all;overflow-wrap:break-word}
+    body{padding:12px}
+    .card{padding:18px 16px 16px;border-radius:10px}
+
+    .head{padding-bottom:10px}
+    .name{font-size:16px;line-height:1.35}
+    .meta{font-size:11px;line-height:1.5}
+
+    .summary{gap:10px;padding:10px 0;flex-direction:column;align-items:stretch}
+    .summary > svg{align-self:center}
+    .mgrid{grid-template-columns:1fr;row-gap:0;column-gap:0}
+    #ai-card-root .m{
+      flex-direction:row;
+      align-items:center;
+      justify-content:space-between;
+      padding:7px 10px;
+      gap:6px;
+      border-bottom:0.5px solid var(--color-border-tertiary);
+    }
+    #ai-card-root .m:last-child{border-bottom:none}
+    #ai-card-root .m .ml{white-space:nowrap;flex-shrink:0;font-size:12px}
+    #ai-card-root .m .grade-badge,
+    #ai-card-root .m .g-d{flex-shrink:0;margin-left:auto;font-size:11.5px;padding:3px 9px}
+
+    .specs{grid-template-columns:1fr 1fr;padding:6px 4px}
+    .sc{padding:5px 4px}
+    .sl{font-size:11px}
+    .sv{font-size:13px;margin-top:3px}
+
+    .sec{padding-top:14px;margin-top:14px}
+    .sec-t{font-size:13px}
+    .rec{font-size:12px;line-height:1.6}
+
+    .strengths{gap:5px}
+    .strength-chip{font-size:11px;padding:4px 8px}
+
+    .persona{grid-template-columns:1fr;gap:6px}
+    .p{padding:11px 13px}
+    .rec-p-title{font-size:12.5px}
+    .p-d{font-size:11.5px}
+
+    .step-h{margin:14px 0 4px;font-size:12.5px}
+    .step-sum{padding-left:22px;font-size:12px}
+    .step-details{padding-left:22px}
+    .field-l{font-size:11px;line-height:1.45}
+    .pill{font-size:11px;padding:3px 8px}
+
+    .gift{padding:10px 12px}
+    .gift-r{font-size:12px;gap:10px}
+    .gift-tag{font-size:10.5px;padding:3px 9px}
+    .gift-v{font-size:12px;min-width:0;word-break:keep-all}
+
+    .demo-note{font-size:11.5px;padding:9px 12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-note">
+  <strong>샘플 데모 · v0.2.3 · F08 노트북</strong> — F08 영상·디지털 룰북 + v0.2.3 절대 규칙 전체 적용. 실제 운영 시 lge.co.kr + prod.danawa.com 크롤 후 source_url + quoted_text + confidence 부여한 데이터로 재생성.
+</div>
+
+<div id="ai-card-root">
+
+  <!-- ============ #18: 카드 라벨 ============ -->
+  <span class="ai-card-tag">빌리조 제품분석</span>
+
+  <div class="card">
+
+    <!-- ============ SLOT 1: 헤더 ============ -->
+    <div class="head">
+      <div>
+        <div class="name">LG gram Pro 16</div>
+        <div class="meta">모델명: <span class="model-num">16Z90SP-KA7VK</span> · 16" 2.8K OLED · Core Ultra 7 · 1.2kg</div>
+      </div>
+    </div>
+
+    <!-- ============ SLOT 2: 게이지(letter) + 4지표(한글 라벨+letter) ============ -->
+    <!-- 종합 88 → A+ (적극추천), dasharray = 88 × 1.65 = 145.2 → "145 165" -->
+    <div class="summary">
+      <svg viewBox="0 0 100 100" width="100" height="100" style="display:block;flex-shrink:0">
+        <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--color-border-tertiary)" stroke-width="6" stroke-linecap="round"/>
+        <path d="M 25.25 74.75 A 35 35 0 1 1 74.75 74.75" fill="none" stroke="var(--g-1-5)" stroke-width="6" stroke-linecap="round" stroke-dasharray="145 165"/>
+        <text x="50" y="40" text-anchor="middle" font-size="9" fill="var(--color-text-secondary)" style="font-family:'Pretendard',sans-serif">종합 평가</text>
+        <text x="50" y="62" text-anchor="middle" font-size="26" fill="var(--g-1-5)" style="font-family:'Pretendard',sans-serif;font-weight:700">A+</text>
+      </svg>
+      <div class="mgrid">
+        <div class="m">
+          <span class="ml">가격대</span>
+          <span class="grade-badge g-A">추천<small>A</small></span>
+        </div>
+        <div class="m">
+          <span class="ml">화질·성능</span>
+          <span class="grade-badge g-S">최고<small>S</small></span>
+        </div>
+        <div class="m">
+          <span class="ml">연결성·OS</span>
+          <span class="grade-badge g-Aplus">적극추천<small>A+</small></span>
+        </div>
+        <div class="m">
+          <span class="ml">AI·편의</span>
+          <span class="grade-badge g-S">최고<small>S</small></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SLOT 3: 6스펙요약 (ⓘ 툴팁 포함) ============ -->
+    <div class="specs">
+      <div class="sc"><div class="sl">렌탈료</div><div class="sv">월 6만원대</div></div>
+      <div class="sc"><div class="sl">화면</div><div class="sv">16 인치</div></div>
+      <div class="sc">
+        <div class="sl">
+          CPU
+          <details class="help"><summary aria-label="Core Ultra 7 설명"></summary><div class="help-pop">Intel Core Ultra 7 155H — 16코어 22스레드. CPU·GPU·NPU(AI 가속기)를 함께 탑재한 Meteor Lake 세대 칩으로, Copilot 등 AI 기능을 로컬에서 빠르게 처리합니다.</div></details>
+        </div>
+        <div class="sv">Core Ultra 7</div>
+      </div>
+      <div class="sc">
+        <div class="sl">
+          해상도
+          <details class="help"><summary aria-label="OLED 설명"></summary><div class="help-pop">2880×1800 해상도 OLED 디스플레이. 픽셀 단위로 빛을 끄고 켜서 명암비 1,000,000:1, DCI-P3 100% 색재현으로 영상 편집·디자인 작업에 적합합니다.</div></details>
+        </div>
+        <div class="sv">2.8K OLED</div>
+      </div>
+      <div class="sc"><div class="sl">OS</div><div class="sv">Windows 11</div></div>
+      <div class="sc"><div class="sl">제품유형</div><div class="sv">프리미엄 노트북</div></div>
+    </div>
+
+    <!-- ============ SLOT 4: 기본정보 + 핵심 강점 ============ -->
+    <div class="sec">
+      <div class="sec-t">기본정보 · 폼팩터</div>
+      <div class="pills">
+        <span class="pill on">16" 프리미엄 노트북</span>
+        <span class="pill">14" 휴대형 노트북</span>
+        <span class="pill">17" 대화면 노트북</span>
+        <span class="pill">2-in-1 컨버터블</span>
+      </div>
+      <div class="rec"><strong>1.2kg 16인치 최경량급</strong> · <strong>2.8K OLED 120Hz</strong> 디스플레이 · <strong>Core Ultra 7 + NPU</strong> AI 가속 — 대화면이 필요하지만 휴대성을 포기하지 못하는 사용자 라인업.</div>
+
+      <!-- #15: 핵심 강점 칩 -->
+      <div class="strengths">
+        <span class="strength-chip"><i class="ti ti-feather" aria-hidden="true"></i>1.2kg 경량</span>
+        <span class="strength-chip"><i class="ti ti-color-swatch" aria-hidden="true"></i>2.8K OLED 120Hz</span>
+        <span class="strength-chip"><i class="ti ti-cpu" aria-hidden="true"></i>Core Ultra 7 + NPU</span>
+        <span class="strength-chip"><i class="ti ti-sparkles" aria-hidden="true"></i>Copilot 전용 키</span>
+        <span class="strength-chip"><i class="ti ti-currency-won" aria-hidden="true"></i>월 6만원대 렌탈</span>
+      </div>
+    </div>
+
+    <!-- ============ SLOT 5: 이런 분에게 추천해요 Top 3 (5요소) ============ -->
+    <div class="sec">
+      <div class="sec-t">이런 분에게 추천해요</div>
+      <div class="persona">
+
+        <div class="p">
+          <div class="p-top">
+            <i class="ti ti-school" aria-hidden="true"></i>
+            <span class="rec-p-level-1">매우 추천</span>
+          </div>
+          <div class="rec-p-title">대학원생 · 연구자</div>
+          <div class="p-d">16인치 대화면 + 2.8K OLED로 논문·코드 작업을 한 화면에서 동시에</div>
+          <div class="feat-btns">
+            <span class="feat-btn">2.8K OLED</span>
+            <span class="feat-btn">22시간 배터리</span>
+            <span class="feat-btn">1.2kg 경량</span>
+          </div>
+        </div>
+
+        <div class="p">
+          <div class="p-top">
+            <i class="ti ti-briefcase" aria-hidden="true"></i>
+            <span class="rec-p-level-2">추천</span>
+          </div>
+          <div class="rec-p-title">재택근무 마케터·기획자</div>
+          <div class="p-d">Copilot + NPU로 AI 워크플로 가속, Thunderbolt 4로 듀얼 모니터 셋업</div>
+          <div class="feat-btns">
+            <span class="feat-btn">Copilot 키</span>
+            <span class="feat-btn">TB4 × 2</span>
+            <span class="feat-btn">Wi-Fi 7</span>
+          </div>
+        </div>
+
+        <div class="p">
+          <div class="p-top">
+            <i class="ti ti-video" aria-hidden="true"></i>
+            <span class="rec-p-level-3">권장</span>
+          </div>
+          <div class="rec-p-title">영상 편집 입문자</div>
+          <div class="p-d">Core Ultra 7 + DCI-P3 100%로 1080p~4K 가벼운 편집 가능 (전문 작업은 RTX 모델 권장)</div>
+          <div class="feat-btns">
+            <span class="feat-btn">Core Ultra 7</span>
+            <span class="feat-btn">DCI-P3 100%</span>
+            <span class="feat-btn">16GB RAM</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ SLOT 6: 상세 스펙 Step 1-3 (자세히 보기 접기) ============ -->
+    <div class="sec">
+      <div class="sec-t">상세 스펙</div>
+
+      <!-- ─── Step 1. 화질·성능 (S 최고) ─── -->
+      <div class="step-h">
+        <span class="step-n">1</span>
+        <span class="step-title">화질·성능</span>
+        <span class="grade-badge g-S" style="margin-left:auto">최고<small>S</small></span>
+      </div>
+      <div class="step-sum"><strong>2.8K OLED 120Hz</strong> + <strong>Intel Core Ultra 7 155H (16코어 22스레드)</strong> + 16GB LPDDR5X — 영상·디자인 작업까지 무리 없음</div>
+      <details class="step-details">
+        <summary>자세히 보기</summary>
+        <div class="field">
+          <div class="field-l">디스플레이 패널</div>
+          <div class="pills">
+            <span class="pill">IPS LCD</span>
+            <span class="pill on">OLED</span>
+            <span class="pill">미니LED</span>
+            <span class="pill">VA</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">주사율 · 해상도 · 색재현</div>
+          <div class="pills">
+            <span class="pill on">120Hz</span>
+            <span class="pill on">2880×1800 (2.8K)</span>
+            <span class="pill on">DCI-P3 100%</span>
+            <span class="pill on">HDR True Black 500</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">CPU · RAM · 저장</div>
+          <div class="pills">
+            <span class="pill on">Intel Core Ultra 7 155H</span>
+            <span class="pill on">16GB LPDDR5X (32GB 옵션)</span>
+            <span class="pill on">512GB NVMe (1TB·2TB 옵션)</span>
+            <span class="pill on">Intel Arc 내장 그래픽</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- ─── Step 2. 연결성·OS (A+ 적극추천) ─── -->
+      <div class="step-h">
+        <span class="step-n">2</span>
+        <span class="step-title">연결성·OS</span>
+        <span class="grade-badge g-Aplus" style="margin-left:auto">적극추천<small>A+</small></span>
+      </div>
+      <div class="step-sum"><strong>Thunderbolt 4 × 2</strong> · <strong>Wi-Fi 7</strong> · <strong>Windows 11</strong> — 듀얼 모니터·외장 GPU·고속 충전 모두 단자 하나로 해결</div>
+      <details class="step-details">
+        <summary>자세히 보기</summary>
+        <div class="field">
+          <div class="field-l">유선 포트 (5종)</div>
+          <div class="pills">
+            <span class="pill on">Thunderbolt 4 × 2</span>
+            <span class="pill on">USB-A 5Gbps × 2</span>
+            <span class="pill on">HDMI 2.1</span>
+            <span class="pill on">microSD</span>
+            <span class="pill on">3.5mm 콤보</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">무선</div>
+          <div class="pills">
+            <span class="pill">Wi-Fi 6</span>
+            <span class="pill">Wi-Fi 6E</span>
+            <span class="pill on">Wi-Fi 7</span>
+            <span class="pill on">Bluetooth 5.3</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">OS · 생태계</div>
+          <div class="pills">
+            <span class="pill on">Windows 11 Home</span>
+            <span class="pill">Windows 11 Pro 옵션</span>
+            <span class="pill on">LG gram Link (iOS·Android 연동)</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- ─── Step 3. AI·편의 (S 최고) ─── -->
+      <div class="step-h">
+        <span class="step-n">3</span>
+        <span class="step-title">AI·편의</span>
+        <span class="grade-badge g-S" style="margin-left:auto">최고<small>S</small></span>
+      </div>
+      <div class="step-sum"><strong>Intel AI Boost NPU + Copilot 키</strong> · <strong>1.2kg 16인치 최경량급</strong> · 77Wh 배터리로 외근·강의 종일 사용</div>
+      <details class="step-details">
+        <summary>자세히 보기</summary>
+        <div class="field">
+          <div class="field-l">AI 기능 (3가지)</div>
+          <div class="pills">
+            <span class="pill on">Intel AI Boost NPU</span>
+            <span class="pill on">Copilot 전용 키</span>
+            <span class="pill on">AI 카메라 (배경흐림·시선보정)</span>
+            <span class="pill">로컬 LLM 추론 (옵션)</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">휴대성 · 배터리</div>
+          <div class="pills">
+            <span class="pill on">1.2kg (16" 최경량급)</span>
+            <span class="pill on">77Wh 배터리 (약 22시간)</span>
+            <span class="pill on">65W USB-C 고속충전</span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-l">보안·입력</div>
+          <div class="pills">
+            <span class="pill on">Windows Hello 지문</span>
+            <span class="pill on">Windows Hello 얼굴인식 (IR 카메라)</span>
+            <span class="pill on">백라이트 풀사이즈 키보드</span>
+            <span class="pill on">정밀 터치패드</span>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- ============ SLOT 7: 예상 최대 지원금ㆍ빌리조 혜택 ============ -->
+    <div class="sec">
+      <div class="sec-t">예상 최대 지원금ㆍ빌리조 혜택</div>
+      <div class="gift">
+        <div class="gift-r">
+          <span class="gift-tag">예상 최대 지원금</span>
+          <span class="gift-db">내부 DB 연동 예정</span>
+        </div>
+        <div class="gift-r">
+          <span class="gift-tag">빌리조 혜택</span>
+          <span class="gift-v"><strong>노트북 가방 + 무선 마우스</strong> + LG 케어솔루션 방문수리</span>
+        </div>
+        <div class="gift-r">
+          <span class="gift-tag">제조사 프로모션</span>
+          <span class="gift-v"><strong>2년 보증 무상 업그레이드</strong> + Microsoft 365 1년</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
