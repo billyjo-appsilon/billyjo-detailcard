@@ -148,6 +148,11 @@ GTM 태그는 `#ai-product-card` 컨테이너를 찾아 카드 JSON으로 채운
 | 25 | **잘림 표시 방식** | fade 그라데이션? 토글 버튼? | **토글 버튼만 사용** — 반투명 fade 그라데이션 금지 (위쪽 버튼을 가리는 부작용) |
 | 26 | **`.rec` 산문 블록** (v0.2.6 폐기) | SLOT 4 내부에 한 줄 산문 형태로 존재하는가? | **사용 금지**. 운영 정보(방문관리·소유권)는 `.specs` 7-8번째 셀로, 페르소나 멘트는 SLOT 5로 단일화. 산문은 시각 중복·정보 과잉을 만든다. |
 | 27 | **좁은화면 헤더 패치** (v0.2.5 신설) | 본 사이트 inject.js 결과 DOM에 대한 대응이 있는가? | **CLAUDE.md #21 따름**. JS 시밍(`.bj-inj-row`/`.bj-inj-left`/`.bj-inj-right` 클래스 부여 + `.bj-ready` 강제 + 이벤트 링크 복원) + CSS 3-stage breakpoint (≤1280 자연 줄바꿈 / ≤1024 별도 행 / ≤768 모바일 1행). `.hamburger__btn` 숨김. 본 사이트 원본 inject.js·CSS 수정 X — 오버라이드로 처리. |
+| 28 | **하단 fixed 위젯 fallback** (v0.4.0 신설) | `.bb-inner` 부재 시 위젯이 비어 보이는가? | **`.bj-bar-fallback` 박스 자체 생성 필수**. `[월 렌탈료 + 가격] [장바구니][🎁 렌탈+사은품 신청][💬 상담신청]` 3버튼. 클릭 핸들러: `window.shoporder()` 함수 우선 → 없으면 `/html/dh_order/shop_cart` · `/html/dh/counsel` URL fallback. inject.js 미실행·지연·정적 페이지 모두 대응. CLAUDE.md #25 참조. |
+| 29 | **PC 가격박스 위치** (v0.4.1-2 신설) | `.fix_price.hide-767`이 평가표 위에 있는가, 아래에 있는가? | **평가표 아래로 이동 필수** (`buildHero()`에서 `.bj-hero-summary.after()`). 순서: `[제품명·모델] → [게이지+4지표] → [가격박스]`. `.bj-fix-price-moved` 마커 클래스. 가격박스 카드 시각 강화(linear-gradient 파랑, row 정렬, 좌 파랑·우 녹색 컬럼, min-height:36px 세로 중앙). |
+| 30 | **카테고리 메뉴 패턴** (v0.3.9 갱신) | pill 버튼 / ▼ 토글 / 텍스트 스와이프 중 어느 것? | **텍스트 전용 스와이프** (절대 규칙 #20). pill·토글 모두 폐기. 좌측 정렬, 활성은 굵게+파랑+하단 짧은 바. JS 자동 스크롤은 minimal scroll (활성이 화면 밖일 때만 좌측 20px로). |
+| 31 | **모바일 검색바 (.search__wrap)** (v0.3.7 신설) | 모바일에서 노출되는가? | **명시 `display:none` 필수**. 검색은 `.m_search_popup` 아이콘 클릭으로 노출. inject.js 변형으로 `.top__right` 외 다른 위치에 렌더될 수 있어 안전망 selectors 3개 (`header .search__wrap`, `header form .search__wrap`, `header .bj-inj-right .search__wrap`) 모두 숨김. |
+| 32 | **약정/의무사용 기간 ⓘ 툴팁** (v0.3.8 신설) | rental-terms 라벨 옆에 도움말 ⓘ가 있는가? | **있어야 함**. 약정 기간 = 계약 전체 기간 / 의무 사용 기간 = 위약금 부과 최소 기간 설명. inject.js의 `addRentalTermsHelp()` 동적 주입 함수가 카드 마크업에 없어도 자동 추가. |
 
 ### 2.1 즉시 결정이 필요한 항목 (High Risk)
 

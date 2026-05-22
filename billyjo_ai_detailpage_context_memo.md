@@ -686,9 +686,52 @@ preEnhance();  // DOMContentLoaded 전에도 즉시 실행
 
 JS 시밍은 inject.js 결과 DOM 후처리 — DOMContentLoaded + setTimeout [100, 400, 1200, 3000] + MutationObserver(6초 후 disconnect). `.bb-inner` 부재 시에도 핸들은 fallback 텍스트(`.prod_name b` + `.top_min_price b`)로 표시. 자세한 사양은 CLAUDE.md 절대 규칙 #25 참조.
 
-**모바일 헤더 (v0.3.2)** — `.new-gnb__wrap`·`.new-gnb`·`.bj-internet-li` ≤768px 명시 숨김. `.header__top { gap:0 }` + 햄버거 `margin-right:5px` + 우측 아이콘 그룹 `margin-left:auto`로 [햄버거-5px-로고-자유공간-아이콘] 정렬 명시. 자세한 사양은 CLAUDE.md 절대 규칙 #21 참조.
+**v0.4.0 fallback 콘텐츠 자체 생성** — `.bb-inner`가 없는 환경(inject.js 미실행/지연/정적 페이지)에서도 위젯이 비어 보이지 않게 위젯 안에 `.bj-bar-fallback` 박스 직접 생성:
+```html
+<div class="bj-bar-fallback">
+  <div class="bj-fb-info">
+    <span class="bj-fb-label">월 렌탈료</span>
+    <span class="bj-fb-price">월 17,900원</span>
+  </div>
+  <div class="bj-fb-btns">
+    <button class="bb-btn bb-btn-cart bj-fb-cart">[cart svg] 장바구니</button>
+    <button class="bb-btn bb-btn-rent bj-btn-rent-gift bj-fb-rent">[gift svg] 렌탈+사은품 신청</button>
+    <button class="bb-btn bj-btn-consult bj-fb-consult">[chat svg] 상담신청</button>
+  </div>
+</div>
+```
+- 가격은 `.prod_name b`, `.top_min_price b`에서 자동 추출
+- 클릭 핸들러: `window.shoporder('cart'|'rent')` 함수 있으면 호출, 없으면 `/html/dh_order/shop_cart` 또는 `/html/dh/counsel`로 fallback URL
+- 모바일 ≤600px: column stack + 버튼 flex:1 풀폭
+- 극협소 ≤400px: 폰트 11.5px, padding 8/8 압축
 
-### 4.7.4 검증 페이지
+**모바일 헤더 (v0.3.2-3.6)** — `.new-gnb__wrap`·`.new-gnb`·`.bj-internet-li` ≤768px 명시 숨김. 로고 `max-width:38vw` (v0.3.6 광폭 로고 겹침 픽스). `.header__top { gap:0 }` + 햄버거 `margin-right:5px` + 우측 아이콘 그룹 `margin-left:auto`로 [햄버거-5px-로고-자유공간-아이콘] 정렬. **v0.3.7**: `.search__wrap` 명시 `display:none` + `#ff1818` 빨강→`#0838F8` 파랑 통일 + `.g-d` 평가없음 배지 높이 통일. **v0.3.9 카테고리 메뉴**: pill 폐기, 텍스트 전용 스와이프, 좌측 정렬(`justify-content:flex-start`), 활성은 굵게+파랑+하단 짧은 바. 자세한 사양은 CLAUDE.md 절대 규칙 #20·#21·#25 참조.
+
+### 4.7.4 PC 가격박스 평가표 하단 이동 (v0.4.1-2)
+
+**의도**: 평가 결과 → 가격 순으로 자연 시선 흐름. 사용자가 카드 가치(평가)를 인식한 뒤 가격을 본다.
+
+**JS 이동** (`buildHero()` 내부):
+```javascript
+var fixPrice = right.querySelector('.fix_price.hide-767');
+var heroSummary = right.querySelector('.bj-hero-summary');
+if (fixPrice && heroSummary && fixPrice.previousElementSibling !== heroSummary) {
+  fixPrice.classList.add('bj-fix-price-moved');
+  heroSummary.after(fixPrice);
+}
+```
+
+**결과 순서**: `[제품명·모델] → [게이지+4지표] → [가격박스]`
+
+**가격박스 시각 강화** (`.fix_price.bj-fix-price-moved`):
+- linear-gradient 연한 파랑 배경 + 1px #d6e0fb 테두리 + border-radius:10px
+- `display:flex; align-items:center; justify-content:center; gap:18px` — 가로/세로 중앙 정렬
+- `.box`: `flex-direction:row; align-items:center; justify-content:space-between; min-height:36px` — 박스 안 라벨(좌)/가격(우) 한 줄 + 박스 안 세로 중앙 정렬 보장 (v0.4.2 픽스)
+- 좌(파랑 #0838F8) 우(녹색 #16a34a) 컬럼, 점선 세로 구분선
+- 폰트: 라벨 12.5px 600 #6a6a6a, 가격 b 22px 800
+- 모바일 1023px↓ column stack + 가로 점선 구분선
+
+### 4.7.5 검증 페이지
 
 - 외부 공개: https://billyjo-header-layouts.vercel.app/final.html
 - 비교 페이지: index에서 canonical / merge_a / merge_b / merge_c / step_1·2·3 / final 비교 가능
