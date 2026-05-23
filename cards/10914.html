@@ -510,7 +510,6 @@
 
       <div id="ai-card-wrapper">
       <div id="ai-card-root">
-        <span class="ai-card-tag">빌리조 제품분석</span>
         <div class="card">
 
           <!-- SLOT 1: 헤더 (규격 흡수) -->
@@ -727,15 +726,9 @@
             </div>
           </div>
 
-          <!-- SLOT 8: 계약 기간별 렌탈료 표 + 제휴카드 안내
-               inject.js의 mergeExistingPricingIntoCard()가 페이지에 이미 있는
-               #lptTable (관리유형/약정기간/관리주기/프로모션/이달의 할인가/최종 할인가)과
-               .card_sale (제휴카드 안내)을 이 컨테이너로 이동 + 강제 노출시킨다.
-               데이터 없으면 inject.js가 섹션 자체를 미렌더한다. -->
-          <div class="sec bj-existing-pricing-sec" id="bj-existing-pricing-slot" style="display:none">
-            <div class="sec-t">계약 기간별 렌탈료 · 제휴카드 할인</div>
-            <div class="bj-existing-pricing-wrap"></div>
-          </div>
+          <!-- SLOT 8 폐기: 카드 안 카드사 할인/lpt 표 미포함.
+               약정기간별 카드할인 적용 렌탈료는 페이지 본문의 #livePriceTable이 담당
+               (inject.js가 약정기간 + 최종 할인가 2개 컬럼만 노출하도록 처리). -->
 
         </div>
       </div>

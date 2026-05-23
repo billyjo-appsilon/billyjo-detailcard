@@ -907,58 +907,37 @@
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // 2.z) 기존 페이지의 가격표·제휴카드 안내를 AI 카드 SLOT 8로 이동
+  // 2.z) 페이지 본문 정리 — AI 카드와 중복되는 .prod_table_wrap hide +
+  //      #livePriceTable 컬럼 축소 (약정기간 + 최종 할인가만)
   //
-  //   페이지에 본래 있는 다음 요소를 카드 안 #bj-existing-pricing-slot으로 이동:
-  //     - #livePriceTable (관리유형·약정·관리주기·프로모션·이달 할인가·최종 할인가)
-  //       → 데이터 미로딩 시 .lpt-empty 클래스로 hidden. 로딩되면 이동.
-  //     - .card_sale (제휴카드 안내 — 카드별 할인 조건)
-  //       → ul > li 있을 때만 이동, 접힘 상태 강제 해제.
-  //   둘 다 비어있으면 SLOT 8 섹션 자체 미노출.
-  //   비동기 데이터 로딩에 대비해 runAll 매 호출마다 idempotent 재시도.
+  //   AI 카드 SLOT 3가 이미 .prod_table_wrap의 스펙 정보를 흡수했으므로 원본 hide.
+  //   #livePriceTable은 본문에 그대로 두되, 사용자 룰에 따라 6개 컬럼 중
+  //   2개(약정기간·최종 할인가)만 노출 — 나머지 컬럼(관리유형·관리주기·프로모션·이달 할인가) hide.
+  //   "카드사 할인" 자체는 카드 안에 표시하지 않음 (.card_sale 페이지 본문 그대로).
+  //   AI 카드가 페이지에 있을 때만 적용.
   // ─────────────────────────────────────────────────────────────────────────
-  function mergeExistingPricingIntoCard(){
-    var slot = document.querySelector('#bj-existing-pricing-slot');
-    if (!slot) return;
-    var wrap = slot.querySelector('.bj-existing-pricing-wrap');
-    if (!wrap) return;
-    var anyVisible = false;
+  function hideOriginalSpecsAndSimplifyLpt(){
+    if (!document.querySelector('#ai-card-root')) return;  // 카드 없으면 건드리지 않음
 
-    // (1) #livePriceTable — wrap으로 이동 + 데이터 유무에 따라 표시/숨김
-    //     데이터 없음(.lpt-empty) 또는 본문이 "실시간 가격 확인중..." → 숨김
+    // (1) .prod_table_wrap hide (SLOT 3과 중복)
+    var ptw = document.querySelector('.prod_table_wrap');
+    if (ptw) ptw.style.setProperty('display', 'none', 'important');
+
+    // (2) #livePriceTable 컬럼 축소 — nth-child 기반 hide
+    //     col 0 관리유형(nth=1)·col 2 관리주기(nth=3)·col 3 프로모션(nth=4)·col 4 이달 할인가(nth=5) hide
+    //     col 1 약정기간(nth=2)·col 5 최종 할인가(nth=6) 유지
     var lpt = document.querySelector('#livePriceTable');
-    if (lpt) {
-      if (lpt.parentElement !== wrap) wrap.appendChild(lpt);
-      var bodyText = (lpt.textContent || '').trim();
-      var lptEmpty = lpt.classList.contains('lpt-empty') ||
-                     bodyText.indexOf('실시간 가격 확인중') !== -1 ||
-                     bodyText === '';
-      if (lptEmpty) {
-        lpt.style.setProperty('display', 'none', 'important');
-      } else {
-        lpt.style.setProperty('display', 'block', 'important');
-        anyVisible = true;
-      }
+    if (lpt && !lpt.dataset.bjLptSimplified) {
+      var hideNth = [1, 3, 4, 5];
+      hideNth.forEach(function(n){
+        lpt.querySelectorAll(
+          'thead tr > *:nth-child(' + n + '), tbody tr > *:nth-child(' + n + ')'
+        ).forEach(function(c){
+          c.style.setProperty('display', 'none', 'important');
+        });
+      });
+      lpt.dataset.bjLptSimplified = '1';
     }
-
-    // (2) .card_sale — wrap으로 이동 + li 있을 때만 표시 + 접힘 강제 해제
-    var cs = document.querySelector('.card_sale');
-    if (cs) {
-      if (cs.parentElement !== wrap) wrap.appendChild(cs);
-      var hasLi = cs.querySelectorAll('ul li').length > 0;
-      if (hasLi) {
-        var ul = cs.querySelector('ul');
-        if (ul) ul.style.setProperty('display', 'block', 'important');
-        var closeBtn = cs.querySelector('.close_btn');
-        if (closeBtn) closeBtn.style.setProperty('display', 'none', 'important');
-        cs.style.setProperty('display', 'block', 'important');
-        anyVisible = true;
-      } else {
-        cs.style.setProperty('display', 'none', 'important');
-      }
-    }
-
-    slot.style.display = anyVisible ? 'block' : 'none';
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -972,7 +951,7 @@
     alignCategoryScroll();
     addRentalTermsHelp();
     fetchAndInjectAICard();
-    mergeExistingPricingIntoCard();
+    hideOriginalSpecsAndSimplifyLpt();
     setupBottomBarVisibility();
   }
 
