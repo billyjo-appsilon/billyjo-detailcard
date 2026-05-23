@@ -939,10 +939,10 @@
       lpt.dataset.bjLptSimplified = '1';
     }
 
-    // (3) lptTable 데이터 채우기 — 페이지 본문의 `.month_box.layer_price[id*="_price_of_"]`
-    //     요소에 약정·가격·카드할인 data-attr이 다 있는데 underlying admin이 lpt를 채우지
-    //     않음 → 직접 채워준다. 약정기간(col 1) + 최종 할인가(col 5)만 의미있게 채우고,
-    //     나머지 컬럼은 빈 셀로 둠 (이미 nth-child로 hide됨).
+    // (3) lptTable 데이터 채우기
+    //     (a) underlying admin이 데이터 제공하면 (rich tbody — rowspan 사용 가능)
+    //         → tbody 파싱해서 약정기간 + 최종 할인가만 추출, 2-col로 재렌더
+    //     (b) 비어있으면 .month_box.layer_price[id*="_price_of_"] data-attr로 fallback
     populateLptFromMonthBoxes();
 
     // (4) PC 가격박스 .fix_price.hide-767 → .prod_name 다음으로 이동
@@ -952,72 +952,126 @@
   function populateLptFromMonthBoxes(){
     var lpt = document.querySelector('#livePriceTable');
     if (!lpt) return;
-    // 매 호출마다 .lpt-empty 재제거 + inline display:block 강제 (underlying이 재부착할 수도 있음)
-    if (lpt.dataset.bjLptPopulated) {
-      lpt.classList.remove('lpt-empty');
-      lpt.style.setProperty('display', 'block', 'important');
-      return;
-    }
-    var table = lpt.querySelector('#lptTable');
-    var tbody = table && table.querySelector('tbody');
-    if (!tbody) return;
-    // 소스: a.month_box.layer_price[id*="_price_of_"] (data-month, data-price, data-dcprice, data-card_dis, data-supname)
-    var sources = document.querySelectorAll('a[id*="_price_of_"][data-month][data-price]');
-    if (sources.length === 0) return;
-
-    var rows = '';
-    sources.forEach(function(src){
-      var month = src.dataset.month || '';
-      var priceStr = src.dataset.price || '';
-      var dc = src.dataset.dcprice || '0';
-      var card_dis = src.dataset.card_dis;
-      var supname = src.dataset.supname || '';
-      // 최종 할인가: card_dis가 "N"(없음)이거나 dc가 0이면 그대로, 아니면 price - dc
-      var finalDisplay = '월 <strong>' + priceStr + '</strong>원';
-      var pNum = parseInt(priceStr.replace(/,/g, ''), 10);
-      var dNum = parseInt(dc, 10);
-      if (card_dis && card_dis !== 'N' && card_dis !== '0' && !isNaN(pNum) && !isNaN(dNum) && dNum > 0) {
-        var finalNum = pNum - dNum;
-        finalDisplay = '월 <strong>' + finalNum.toLocaleString() + '</strong>원';
-      }
-      rows +=
-        '<tr style="border-bottom:0.5px solid #eee">' +
-          '<td style="padding:12px 8px;text-align:center;color:#666">' + supname + '</td>' +
-          '<td style="padding:12px 8px;text-align:center;font-weight:600">' + month + '</td>' +
-          '<td style="padding:12px 8px;text-align:center;color:#999">—</td>' +
-          '<td style="padding:12px 8px;text-align:center;color:#999">—</td>' +
-          '<td style="padding:12px 8px;text-align:center;color:#999">—</td>' +
-          '<td style="padding:12px 8px;text-align:center;color:#0838f8;font-size:15px">' + finalDisplay + '</td>' +
-        '</tr>';
-    });
-    tbody.innerHTML = rows;
-
-    // hide 됐던 컬럼 룰을 새로 추가된 tbody td에도 다시 적용
-    var hideNth = [1, 3, 4, 5];
-    hideNth.forEach(function(n){
-      tbody.querySelectorAll('tr > *:nth-child(' + n + ')').forEach(function(c){
-        c.style.setProperty('display', 'none', 'important');
-      });
-    });
-
-    // wrapper의 .lpt-empty 제거하여 가시화. 만약 underlying 스크립트가 재부착하면
-    // 아래 inline display로 override.
     lpt.classList.remove('lpt-empty');
     lpt.style.setProperty('display', 'block', 'important');
 
-    // lptTitle 갱신 ("실시간 가격 확인중..." → 제품명)
+    var table = lpt.querySelector('#lptTable');
+    var tbody = table && table.querySelector('tbody');
+    if (!tbody) return;
+
+    // 우선 underlying이 제공한 rich tbody (rowspan 가능)에서 약정+최종할인가 추출
+    var entries = extractLptEntriesFromUnderlying(table);
+    // 비어있거나 추출 실패 → .month_box fallback
+    if (entries.length === 0) entries = extractLptEntriesFromMonthBoxes();
+    if (entries.length === 0) return;
+
+    // 시그너처로 idempotent 처리 (underlying이 매번 다시 채울 때 깜빡임 방지)
+    var sig = entries.map(function(e){ return e.term + '|' + e.finalPrice; }).join(';');
+    if (lpt.dataset.bjLptSignature === sig) return;
+
+    // simple 2-col 구조로 재렌더 (다른 컬럼은 빈 셀 + display:none)
+    var rows = '';
+    entries.forEach(function(e){
+      rows +=
+        '<tr style="border-bottom:0.5px solid #eee">' +
+          '<td style="display:none"></td>' +
+          '<td style="padding:12px 8px;text-align:center;font-weight:600">' + escapeHtml(e.term) + '</td>' +
+          '<td style="display:none"></td>' +
+          '<td style="display:none"></td>' +
+          '<td style="display:none"></td>' +
+          '<td style="padding:12px 8px;text-align:center;color:#0838f8;font-size:15px;font-weight:700">' + escapeHtml(e.finalPrice) + '</td>' +
+        '</tr>';
+    });
+    tbody.innerHTML = rows;
+    lpt.dataset.bjLptSignature = sig;
+    lpt.dataset.bjLptPopulated = '1';
+
+    // lptTitle 갱신
     var title = document.getElementById('lptTitle');
     if (title) {
       var nameEl = document.querySelector('.prod_name > b');
       var modelEl = document.querySelector('.prod_name .model_name small');
       if (nameEl) {
-        var inner = nameEl.textContent.trim();
-        if (modelEl) inner += '<br><span style="font-size:12px;opacity:0.85;font-weight:400">' + modelEl.textContent.trim() + '</span>';
+        var inner = escapeHtml(nameEl.textContent.trim());
+        if (modelEl) inner += '<br><span style="font-size:12px;opacity:0.85;font-weight:400">' + escapeHtml(modelEl.textContent.trim()) + '</span>';
         title.innerHTML = inner;
       }
     }
+  }
 
-    lpt.dataset.bjLptPopulated = '1';
+  function escapeHtml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // underlying lptTable의 rich tbody → 약정기간 + 최종 할인가 추출 (rowspan-aware)
+  function extractLptEntriesFromUnderlying(table){
+    var thead = table.querySelector('thead');
+    var tbody = table.querySelector('tbody');
+    if (!thead || !tbody) return [];
+    var ths = Array.from(thead.querySelectorAll('th'));
+    if (ths.length === 0) return [];
+    var termIdx = -1, finalIdx = -1;
+    ths.forEach(function(th, i){
+      var t = (th.textContent || '').trim();
+      if (t === '약정기간') termIdx = i;
+      if (t === '최종 할인가') finalIdx = i;
+    });
+    if (termIdx === -1 || finalIdx === -1) return [];
+
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length === 0) return [];
+    if (rows.length === 1 && /실시간 가격|확인중/.test(rows[0].textContent || '')) return [];
+
+    var entries = [];
+    var pending = {};  // {colIdx: {text, remaining}}
+    rows.forEach(function(tr){
+      var cells = Array.from(tr.children);
+      var rowMap = {};
+      var c = 0;
+      var ci = 0;
+      while (c < ths.length) {
+        if (pending[c] && pending[c].remaining > 0) {
+          rowMap[c] = pending[c].text;
+          pending[c].remaining--;
+          c++;
+          continue;
+        }
+        if (ci >= cells.length) break;
+        var cell = cells[ci];
+        var rs = parseInt(cell.getAttribute('rowspan'), 10) || 1;
+        var cs = parseInt(cell.getAttribute('colspan'), 10) || 1;
+        var text = (cell.textContent || '').replace(/\s+/g, ' ').trim();
+        for (var k = 0; k < cs; k++) {
+          rowMap[c + k] = text;
+          if (rs > 1) pending[c + k] = { text: text, remaining: rs - 1 };
+        }
+        c += cs;
+        ci++;
+      }
+      var term = rowMap[termIdx];
+      var fin = rowMap[finalIdx];
+      if (term && fin) entries.push({ term: term, finalPrice: fin });
+    });
+    return entries;
+  }
+
+  function extractLptEntriesFromMonthBoxes(){
+    var sources = document.querySelectorAll('a[id*="_price_of_"][data-month][data-price]');
+    var out = [];
+    sources.forEach(function(src){
+      var month = src.dataset.month || '';
+      var priceStr = src.dataset.price || '';
+      var dc = src.dataset.dcprice || '0';
+      var card_dis = src.dataset.card_dis;
+      var finalDisplay = '월 ' + priceStr + '원';
+      var pNum = parseInt(priceStr.replace(/,/g, ''), 10);
+      var dNum = parseInt(dc, 10);
+      if (card_dis && card_dis !== 'N' && card_dis !== '0' && !isNaN(pNum) && !isNaN(dNum) && dNum > 0) {
+        finalDisplay = '월 ' + (pNum - dNum).toLocaleString() + '원';
+      }
+      out.push({ term: month, finalPrice: finalDisplay });
+    });
+    return out;
   }
 
   function reorderFixPriceAfterProdName(){
