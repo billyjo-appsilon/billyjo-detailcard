@@ -965,9 +965,13 @@
     if (entries.length === 0) entries = extractLptEntriesFromMonthBoxes();
     if (entries.length === 0) return;
 
-    // 시그너처로 idempotent 처리 (underlying이 매번 다시 채울 때 깜빡임 방지)
-    var sig = entries.map(function(e){ return (e.mgmt||'') + '|' + e.term + '|' + (e.monthly||'') + '|' + e.finalPrice; }).join(';');
-    if (lpt.dataset.bjLptSignature === sig) return;
+    // tbody 첫 행에 bj-simple-row 마커 있으면 우리가 이미 렌더한 상태 → skip.
+    // underlying이 덮어쓰면 마커가 사라지므로 다시 rerender.
+    var firstRow = tbody.querySelector('tr');
+    if (firstRow && firstRow.hasAttribute('data-bj-simple-row')) {
+      var sig = entries.map(function(e){ return (e.mgmt||'') + '|' + e.term + '|' + (e.monthly||'') + '|' + e.finalPrice; }).join(';');
+      if (lpt.dataset.bjLptSignature === sig) return;
+    }
 
     // 여러 관리유형이 섞여있으면 약정기간 셀에 prefix로 표기 (예: "[방문관리] 3년의무")
     var mgmtSet = {};
@@ -984,7 +988,7 @@
       else if (needMgmtPrefix && e.mgmt === '자가관리') bg = 'background:#ffffff;';
       var monthlyDisplay = e.monthly && e.monthly !== e.finalPrice ? e.monthly : '—';
       rows +=
-        '<tr style="border-bottom:0.5px solid #eee;' + bg + '">' +
+        '<tr data-bj-simple-row="1" style="border-bottom:0.5px solid #eee;' + bg + '">' +
           '<td style="display:none"></td>' +
           '<td style="padding:12px 8px;text-align:center;font-weight:600">' + escapeHtml(termText) + '</td>' +
           '<td style="display:none"></td>' +
@@ -1008,8 +1012,20 @@
         '<th style="background:#0838f8;color:#fff;padding:10px 8px;text-align:center;font-weight:600">카드 할인가</th>';
     }
 
-    lpt.dataset.bjLptSignature = sig;
+    lpt.dataset.bjLptSignature = entries.map(function(e){ return (e.mgmt||'') + '|' + e.term + '|' + (e.monthly||'') + '|' + e.finalPrice; }).join(';');
     lpt.dataset.bjLptPopulated = '1';
+
+    // underlying이 tbody를 다시 덮어쓰면 MutationObserver가 재렌더 트리거
+    if (!lpt.dataset.bjLptObserved && window.MutationObserver) {
+      lpt.dataset.bjLptObserved = '1';
+      var obs = new MutationObserver(function(){
+        // 다음 tick에서 populateLpt 재호출 (synchronous mutation 루프 방지)
+        setTimeout(populateLptFromMonthBoxes, 0);
+      });
+      try { obs.observe(tbody, { childList: true, subtree: false }); } catch(e){}
+      // 5초 후 disconnect (성능 + 무한루프 방지)
+      setTimeout(function(){ try { obs.disconnect(); } catch(e){} }, 8000);
+    }
 
     // lptTitle 갱신
     var title = document.getElementById('lptTitle');
