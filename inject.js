@@ -974,12 +974,16 @@
     entries.forEach(function(e){ if (e.mgmt) mgmtSet[e.mgmt] = true; });
     var needMgmtPrefix = Object.keys(mgmtSet).length > 1;
 
-    // simple 2-col 구조로 재렌더 (다른 컬럼은 빈 셀 + display:none)
+    // simple 2-col 구조로 재렌더 (다른 컬럼은 빈 셀 + display:none).
+    // 관리유형 그룹별 row 배경: 방문관리 → 옅은 회색, 자가관리 → 흰색 (시각적 구분)
     var rows = '';
     entries.forEach(function(e){
       var termText = needMgmtPrefix && e.mgmt ? '[' + e.mgmt + '] ' + e.term : e.term;
+      var bg = '';
+      if (needMgmtPrefix && e.mgmt === '방문관리') bg = 'background:#f5f6f8;';
+      else if (needMgmtPrefix && e.mgmt === '자가관리') bg = 'background:#ffffff;';
       rows +=
-        '<tr style="border-bottom:0.5px solid #eee">' +
+        '<tr style="border-bottom:0.5px solid #eee;' + bg + '">' +
           '<td style="display:none"></td>' +
           '<td style="padding:12px 8px;text-align:center;font-weight:600">' + escapeHtml(termText) + '</td>' +
           '<td style="display:none"></td>' +
