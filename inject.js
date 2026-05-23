@@ -1053,30 +1053,20 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // underlying lptTable의 rich tbody → 약정기간 + 최종 할인가 추출 (rowspan-aware)
+  // underlying lptTable의 rich tbody → 약정기간 + 이달의 할인가 + 최종 할인가 추출.
+  // 컬럼 순서는 모든 제품 공통(관리유형/약정기간/관리주기/프로모션/이달의 할인가/최종 할인가)
+  // 이므로 인덱스 하드코딩. (우리가 thead를 재명명한 후에도 호출되므로 thead text에
+  // 의존하지 않음.)
   function extractLptEntriesFromUnderlying(table){
-    var thead = table.querySelector('thead');
     var tbody = table.querySelector('tbody');
-    if (!thead || !tbody) return [];
-    var ths = Array.from(thead.querySelectorAll('th'));
-    if (ths.length === 0) return [];
-    var termIdx = -1, finalIdx = -1;
-    ths.forEach(function(th, i){
-      var t = (th.textContent || '').trim();
-      if (t === '약정기간') termIdx = i;
-      if (t === '최종 할인가') finalIdx = i;
-    });
-    if (termIdx === -1 || finalIdx === -1) return [];
-    var mgmtIdx = -1, monthlyIdx = -1;
-    ths.forEach(function(th, i){
-      var t = (th.textContent || '').trim();
-      if (t === '관리유형') mgmtIdx = i;
-      if (t === '이달의 할인가') monthlyIdx = i;
-    });
+    if (!tbody) return [];
+    var mgmtIdx = 0, termIdx = 1, monthlyIdx = 4, finalIdx = 5;
 
     var rows = Array.from(tbody.querySelectorAll('tr'));
     if (rows.length === 0) return [];
     if (rows.length === 1 && /실시간 가격|확인중/.test(rows[0].textContent || '')) return [];
+    // 우리가 렌더한 simple 행이면 underlying 데이터 아님 → skip (캐시로 fallback)
+    if (rows[0].hasAttribute('data-bj-simple-row')) return [];
 
     var entries = [];
     var pending = {};  // {colIdx: {text, remaining}}
@@ -1085,7 +1075,7 @@
       var rowMap = {};
       var c = 0;
       var ci = 0;
-      while (c < ths.length) {
+      while (c < 6) {
         if (pending[c] && pending[c].remaining > 0) {
           rowMap[c] = pending[c].text;
           pending[c].remaining--;
