@@ -966,7 +966,7 @@
     if (entries.length === 0) return;
 
     // 시그너처로 idempotent 처리 (underlying이 매번 다시 채울 때 깜빡임 방지)
-    var sig = entries.map(function(e){ return (e.mgmt||'') + '|' + e.term + '|' + e.finalPrice; }).join(';');
+    var sig = entries.map(function(e){ return (e.mgmt||'') + '|' + e.term + '|' + (e.monthly||'') + '|' + e.finalPrice; }).join(';');
     if (lpt.dataset.bjLptSignature === sig) return;
 
     // 여러 관리유형이 섞여있으면 약정기간 셀에 prefix로 표기 (예: "[방문관리] 3년의무")
@@ -982,17 +982,32 @@
       var bg = '';
       if (needMgmtPrefix && e.mgmt === '방문관리') bg = 'background:#f5f6f8;';
       else if (needMgmtPrefix && e.mgmt === '자가관리') bg = 'background:#ffffff;';
+      var monthlyDisplay = e.monthly && e.monthly !== e.finalPrice ? e.monthly : '—';
       rows +=
         '<tr style="border-bottom:0.5px solid #eee;' + bg + '">' +
           '<td style="display:none"></td>' +
           '<td style="padding:12px 8px;text-align:center;font-weight:600">' + escapeHtml(termText) + '</td>' +
           '<td style="display:none"></td>' +
           '<td style="display:none"></td>' +
-          '<td style="display:none"></td>' +
+          '<td style="padding:12px 8px;text-align:center;color:#444;font-size:14px">' + escapeHtml(monthlyDisplay) + '</td>' +
           '<td style="padding:12px 8px;text-align:center;color:#0838f8;font-size:15px;font-weight:700">' + escapeHtml(e.finalPrice) + '</td>' +
         '</tr>';
     });
     tbody.innerHTML = rows;
+
+    // thead 라벨도 업데이트 — 약정기간 / 월 렌탈료 / 카드 적용가
+    // (underlying의 이달의 할인가 → 월 렌탈료, 최종 할인가 → 카드 적용가로 재명명)
+    var thead2 = table.querySelector('thead tr');
+    if (thead2) {
+      thead2.innerHTML =
+        '<th style="display:none"></th>' +
+        '<th style="background:#0838f8;color:#fff;padding:10px 8px;text-align:center;font-weight:600">약정기간</th>' +
+        '<th style="display:none"></th>' +
+        '<th style="display:none"></th>' +
+        '<th style="background:#0838f8;color:#fff;padding:10px 8px;text-align:center;font-weight:600">월 렌탈료</th>' +
+        '<th style="background:#0838f8;color:#fff;padding:10px 8px;text-align:center;font-weight:600">카드 할인가</th>';
+    }
+
     lpt.dataset.bjLptSignature = sig;
     lpt.dataset.bjLptPopulated = '1';
 
@@ -1027,9 +1042,11 @@
       if (t === '최종 할인가') finalIdx = i;
     });
     if (termIdx === -1 || finalIdx === -1) return [];
-    var mgmtIdx = -1;
+    var mgmtIdx = -1, monthlyIdx = -1;
     ths.forEach(function(th, i){
-      if ((th.textContent || '').trim() === '관리유형') mgmtIdx = i;
+      var t = (th.textContent || '').trim();
+      if (t === '관리유형') mgmtIdx = i;
+      if (t === '이달의 할인가') monthlyIdx = i;
     });
 
     var rows = Array.from(tbody.querySelectorAll('tr'));
@@ -1065,7 +1082,8 @@
       var term = rowMap[termIdx];
       var fin = rowMap[finalIdx];
       var mgmt = mgmtIdx >= 0 ? (rowMap[mgmtIdx] || '') : '';
-      if (term && fin) entries.push({ term: term, finalPrice: fin, mgmt: mgmt });
+      var monthly = monthlyIdx >= 0 ? (rowMap[monthlyIdx] || '') : '';
+      if (term && fin) entries.push({ term: term, finalPrice: fin, mgmt: mgmt, monthly: monthly });
     });
     return entries;
   }
@@ -1084,7 +1102,7 @@
       if (card_dis && card_dis !== 'N' && card_dis !== '0' && !isNaN(pNum) && !isNaN(dNum) && dNum > 0) {
         finalDisplay = '월 ' + (pNum - dNum).toLocaleString() + '원';
       }
-      out.push({ term: month, finalPrice: finalDisplay });
+      out.push({ term: month, finalPrice: finalDisplay, monthly: finalDisplay, mgmt: '' });
     });
     return out;
   }
