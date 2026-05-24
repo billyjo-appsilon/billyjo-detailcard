@@ -917,11 +917,15 @@
   //   AI 카드가 페이지에 있을 때만 적용.
   // ─────────────────────────────────────────────────────────────────────────
   function hideOriginalSpecsAndSimplifyLpt(){
-    if (!document.querySelector('#ai-card-root')) return;  // 카드 없으면 건드리지 않음
+    // prod_view 페이지에서만 동작
+    if (!/\/prod_view\/\d+/.test(location.pathname || '')) return;
 
-    // (1) .prod_table_wrap hide (SLOT 3과 중복)
-    var ptw = document.querySelector('.prod_table_wrap');
-    if (ptw) ptw.style.setProperty('display', 'none', 'important');
+    // (1) .prod_table_wrap hide — AI 카드가 있을 때만 (SLOT 3와 중복이라 카드 있으면 정보 손실 없음;
+    //     카드 없으면 본문 spec 표가 유일한 정보원이므로 보존)
+    if (document.querySelector('#ai-card-root')) {
+      var ptw = document.querySelector('.prod_table_wrap');
+      if (ptw) ptw.style.setProperty('display', 'none', 'important');
+    }
 
     // (2) #livePriceTable 컬럼 축소 — nth-child 기반 hide
     //     col 0 관리유형(nth=1)·col 2 관리주기(nth=3)·col 3 프로모션(nth=4)·col 4 이달 할인가(nth=5) hide
