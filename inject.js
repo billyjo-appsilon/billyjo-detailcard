@@ -181,6 +181,11 @@
       '  .hamburger__btn{display:none !important}',
       '  header .logo.logo, body .logo{ flex:0 1 auto !important; max-width:38vw !important; overflow:hidden !important; }',
       '  header .logo img{ max-width:100% !important; height:26px !important; object-fit:contain !important; }',
+      // (3) PC GNB 우측(.bj-inj-right) 모바일·태블릿 hide — 이벤트·고객센터·장바구니·search
+      //     이미 위 헤더에 #bj-header-icons로 동일 기능 제공됨. 고객센터는 하단 상담버튼.
+      '  .bj-inj-right, header .bj-inj-right, header.new-header .bj-inj-right{',
+      '    display:none !important;',
+      '  }',
       '  /* 우측 아이콘 그룹 shrink 허용 */',
       '  ul#bj-header-icons{ flex:0 1 auto !important; min-width:0 !important; gap:6px !important; margin-left:auto !important; }',
       // 협소(≤400px)
@@ -944,16 +949,16 @@
   // ─────────────────────────────────────────────────────────────────────────
   function setupBottomBarVisibility(){
     if (window.__bjBarVisibilitySetup) return;
-    // 현재 라이브 빌리조 사이트는 billyjo-inject가 `#billyjo-bottom-bar`로 위젯을 동적 생성한다.
-    // (룰북 canonical은 `.prod_view_bot.card.mt40`이었음 — fallback으로 유지.)
+    // 10914 한정 게이트: 새 트리거(lpt 통과) + 명시적 토글 — 승인 후 전제품 확대 예정.
+    var IS_TEST_PROD = /\/prod_view\/10914/.test(location.pathname);
+
     var wrapper = document.querySelector('#billyjo-bottom-bar') ||
                   document.querySelector('.prod_view_bot.card.mt40');
     if (!wrapper) return;
     var aiCard = document.querySelector('#ai-card-root');
-    if (!aiCard) return;  // 카드 없는 페이지 → 기존 항상 노출 동작 유지
+    if (!aiCard) return;
 
     window.__bjBarVisibilitySetup = true;
-    // 부드러운 슬라이드 위해 transition 보강
     if (!wrapper.dataset.bjBarTransition) {
       wrapper.style.setProperty('transition',
         (wrapper.style.transition || '') + ', bottom 0.38s cubic-bezier(0.2,0.9,0.3,1)',
@@ -962,22 +967,22 @@
     }
     wrapper.classList.add('bj-bar-slide-hidden');
 
-    var manualHide = false;        // 사용자가 외부 탭으로 명시 숨김
-    var pastCard = false;            // 카드를 충분히 지나갔는지
+    // 사용자 dismiss 영구 기록 (sessionStorage — 세션 동안만)
+    var SESSION_KEY = 'bjBarDismissed_' + (location.pathname.match(/prod_view\/(\d+)/) || [,'unknown'])[1];
+    var manualHide = (function(){ try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch(e){ return false; } })();
+    var pastTrigger = false;
 
     function evalScroll(){
-      var r = aiCard.getBoundingClientRect();
-      // 카드의 70% 이상이 viewport 위로 올라갔을 때 통과
+      // 새 트리거 (10914): #livePriceTable 통과
+      // 기존 트리거: #ai-card-root 통과
+      var target = IS_TEST_PROD ? (document.querySelector('#livePriceTable') || aiCard) : aiCard;
+      var r = target.getBoundingClientRect();
       var threshold = window.innerHeight * 0.3;
-      pastCard = r.bottom < threshold;
+      pastTrigger = r.bottom < threshold;
       apply();
     }
     function apply(){
-      var show = pastCard && !manualHide;
-      // inline `bottom:0!important` (forceFixedStyle)이 stylesheet `!important`를 이기므로
-      // 직접 inline으로 setProperty (!important)로 토글한다.
-      // billyjo-inject(underlying)가 자체 scroll 로직으로 `show` 클래스를 토글하므로,
-      // 우리가 보이려고 할 땐 `show`를 강제 부여한다.
+      var show = pastTrigger && !manualHide;
       if (show) {
         wrapper.classList.remove('bj-bar-slide-hidden');
         wrapper.classList.add('show');
@@ -989,8 +994,30 @@
         wrapper.classList.add('bj-bar-slide-hidden');
         wrapper.style.setProperty('bottom', '-280px', 'important');
         wrapper.style.setProperty('pointer-events', 'none', 'important');
-        // visibility/opacity는 그대로 두어 슬라이드 효과 유지 (visibility:hidden은 transition X)
       }
+    }
+
+    // 10914 한정: 명시적 X 버튼 (위젯 우측 상단 모서리에 dismiss)
+    if (IS_TEST_PROD && !wrapper.querySelector('.bj-bar-dismiss-x')) {
+      var x = document.createElement('button');
+      x.className = 'bj-bar-dismiss-x';
+      x.type = 'button';
+      x.setAttribute('aria-label', '하단 위젯 닫기 (세션 동안)');
+      x.style.cssText = [
+        'position:absolute','top:6px','right:8px','width:28px','height:28px',
+        'border-radius:50%','background:rgba(255,255,255,0.85)','color:#333','border:0',
+        'font-size:16px','font-weight:700','cursor:pointer','z-index:100000',
+        'display:flex','align-items:center','justify-content:center',
+        'box-shadow:0 2px 6px rgba(0,0,0,0.15)',
+      ].join(';');
+      x.textContent = '✕';
+      x.onclick = function(e){
+        e.stopPropagation(); e.preventDefault();
+        manualHide = true;
+        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch(_){}
+        apply();
+      };
+      wrapper.appendChild(x);
     }
 
     // throttled scroll
@@ -1006,20 +1033,19 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
 
-    // body tap/click — 위젯 영역 밖이면 토글
-    function onBodyTap(e){
-      if (!pastCard) return;       // 카드 통과 전엔 토글 비활성
-      if (wrapper.contains(e.target)) return;  // 위젯 내부 탭은 무시 (자체 핸들이 처리)
-      // 헬프 팝업·기타 인터랙티브 요소는 제외
-      if (e.target.closest && e.target.closest('details, .help-pop, button, a, input, select, textarea, [role="button"]')) return;
-      manualHide = !manualHide;
-      apply();
+    // body tap/click — 외부 탭 토글 (10914에서는 비활성 — X 버튼으로만 dismiss)
+    if (!IS_TEST_PROD) {
+      function onBodyTap(e){
+        if (!pastTrigger) return;
+        if (wrapper.contains(e.target)) return;
+        if (e.target.closest && e.target.closest('details, .help-pop, button, a, input, select, textarea, [role="button"]')) return;
+        manualHide = !manualHide;
+        apply();
+      }
+      document.addEventListener('click', onBodyTap);
+      document.addEventListener('touchend', onBodyTap, { passive: true });
+      wrapper.addEventListener('click', function(){ if (manualHide) { manualHide = false; apply(); }});
     }
-    document.addEventListener('click', onBodyTap);
-    document.addEventListener('touchend', onBodyTap, { passive: true });
-
-    // 위젯 자체를 탭하면 manualHide 해제 (다시 보이게 강제)
-    wrapper.addEventListener('click', function(){ if (manualHide) { manualHide = false; apply(); }});
 
     evalScroll();  // 초기 평가
   }
