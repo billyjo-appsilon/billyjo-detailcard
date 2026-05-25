@@ -169,18 +169,18 @@
       '  .category__wrap > a, .category__wrap > *{',
       '    flex:0 0 auto !important; white-space:nowrap !important;',
       '  }',
-      // (2) 헤더 햄버거 + 로고 정렬 (룰북 #21)
-      '  .header__top{',
+      // (2) 헤더 햄버거 + 로고 정렬 (룰북 #21) — specificity 강화
+      '  header.new-header .header__top, header .header__top.header__top, body .header__top{',
       '    display:flex !important; align-items:center !important;',
       '    padding:8px 12px !important; gap:0 !important;',
       '    overflow:hidden !important;',
       '  }',
-      '  .gnb__hamburger{',
+      '  header .gnb__hamburger.gnb__hamburger, body .gnb__hamburger{',
       '    margin-right:5px !important; flex:0 0 auto !important;',
       '  }',
       '  .hamburger__btn{display:none !important}',
-      '  .logo{ flex:0 1 auto !important; max-width:38vw !important; overflow:hidden !important; }',
-      '  .logo img{ max-width:100% !important; height:26px !important; object-fit:contain !important; }',
+      '  header .logo.logo, body .logo{ flex:0 1 auto !important; max-width:38vw !important; overflow:hidden !important; }',
+      '  header .logo img{ max-width:100% !important; height:26px !important; object-fit:contain !important; }',
       '  /* 우측 아이콘 그룹 shrink 허용 */',
       '  ul#bj-header-icons{ flex:0 1 auto !important; min-width:0 !important; gap:6px !important; margin-left:auto !important; }',
       // 협소(≤400px)
