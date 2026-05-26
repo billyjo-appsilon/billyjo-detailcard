@@ -499,11 +499,26 @@
     /* bb-inner padding 조정 */
     '.prod_view_bot.card.mt40 .bb-inner{ padding:14px 18px 16px !important }',
 
-    /* v0.5.6: 위젯 내 렌탈사·약정 selector */
+    /* v0.5.6 / v0.5.8: 위젯 내 렌탈사·약정 selector */
     '.bj-widget-selector{',
     '  display:flex !important; flex-direction:column !important;',
-    '  gap:8px !important;',
+    '  gap:10px !important;',
     '}',
+    /* v0.5.8: 다중 렌탈사 섹션 — "렌탈사 선택" 라벨 + 탭 + "{이름}의 약정 조건" 라벨 */
+    '.bj-ws-sup-section{',
+    '  display:flex !important; flex-direction:column !important; gap:6px !important;',
+    '  padding-bottom:10px !important;',
+    '  border-bottom:0.5px dashed #e5e5e5 !important;',
+    '}',
+    '.bj-ws-sup-label{',
+    '  font-size:11px; color:#888; font-weight:600;',
+    '  font-family:Pretendard,sans-serif;',
+    '}',
+    '.bj-ws-term-label{',
+    '  font-size:12px; color:#444; font-weight:500;',
+    '  margin-top:4px; font-family:Pretendard,sans-serif;',
+    '}',
+    '.bj-ws-term-label strong{ color:#0838F8; font-weight:700 }',
     '.bj-ws-sup-tabs{',
     '  display:flex !important; gap:6px !important;',
     '  overflow-x:auto !important; padding-bottom:2px;',
@@ -512,13 +527,14 @@
     '}',
     '.bj-ws-sup-tabs::-webkit-scrollbar{ display:none }',
     '.bj-ws-sup-tab{',
-    '  flex:0 0 auto !important; padding:6px 12px !important;',
+    '  flex:0 0 auto !important; padding:7px 14px !important;',
     '  background:#f4f4f4 !important; color:#555 !important;',
     '  border:1px solid #e5e5e5 !important; border-radius:16px !important;',
-    '  font:600 12px Pretendard,sans-serif !important; cursor:pointer !important;',
+    '  font:600 12.5px Pretendard,sans-serif !important; cursor:pointer !important;',
     '  white-space:nowrap !important;',
     '  transition:all 0.15s !important;',
     '}',
+    '.bj-ws-sup-tab:hover{ border-color:#0838F8 !important; color:#0838F8 !important }',
     '.bj-ws-sup-tab.active{',
     '  background:#0838F8 !important; color:#fff !important;',
     '  border-color:#0838F8 !important;',
@@ -936,7 +952,8 @@
                     (document.querySelector('.top_min_price b') && '월 ' + document.querySelector('.top_min_price b').textContent.trim() + '원') ||
                     '';
 
-    // v0.5.4: 핸들 = 제품명 + 최저가 (bb-inner와의 중복 정보 통합 — 핸들이 단일 출처)
+    /* v0.5.8: 핸들 = 가격만 (제품명 제거 — 사용자가 어떤 제품인지 이미 알고 있음).
+       BEST 라벨 + 가격 + 토글 chevron만. */
     var handle = document.createElement('div');
     handle.className = 'bj-bar-handle';
     handle.setAttribute('role', 'button');
@@ -944,8 +961,7 @@
     handle.setAttribute('tabindex', '0');
     handle.innerHTML =
       '<div class="bj-bar-handle-text">' +
-        '<span class="bj-bar-handle-name">' + nameText + '</span>' +
-        (priceText ? '<span class="bj-bar-handle-price">' + priceText + '</span>' : '') +
+        (priceText ? '<span class="bj-bar-handle-price">' + priceText + '</span>' : '<span class="bj-bar-handle-price">렌탈 신청</span>') +
       '</div>' +
       '<button type="button" class="bj-bar-handle-toggle" aria-label="펼치기/접기">' +
         '<span class="bj-bar-chevron">▾</span>' +
@@ -1144,14 +1160,19 @@
         return suppliers[si].terms.some(function(t){ return t.isBest; });
       };
 
+      /* 다중 렌탈사 — 상단에 [렌탈사 선택] 라벨 + 탭, 그 아래 "{선택 렌탈사}의 약정 조건" 라벨 */
       var supTabs = multiSupplier
-        ? '<div class="bj-ws-sup-tabs">' +
-            suppliers.map(function(s, i){
-              var bestMark = supHasBest(i) ? '<span class="bj-ws-best-dot" aria-label="BEST"></span>' : '';
-              return '<button type="button" class="bj-ws-sup-tab' + (i === state.supIdx ? ' active' : '') + '" data-i="' + i + '">' +
-                escapeWidgetHtml(s.name) + bestMark +
-              '</button>';
-            }).join('') +
+        ? '<div class="bj-ws-sup-section">' +
+            '<div class="bj-ws-sup-label">렌탈사 선택</div>' +
+            '<div class="bj-ws-sup-tabs">' +
+              suppliers.map(function(s, i){
+                var bestMark = supHasBest(i) ? '<span class="bj-ws-best-dot" aria-label="BEST"></span>' : '';
+                return '<button type="button" class="bj-ws-sup-tab' + (i === state.supIdx ? ' active' : '') + '" data-i="' + i + '">' +
+                  escapeWidgetHtml(s.name) + bestMark +
+                '</button>';
+              }).join('') +
+            '</div>' +
+            '<div class="bj-ws-term-label"><strong>' + escapeWidgetHtml(sup.name) + '</strong>의 약정 조건</div>' +
           '</div>'
         : '';
 
