@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.32 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.33 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -628,6 +628,25 @@
     '}',
     '.bj-ws-term-pill.has-card-dc .bj-ws-term-price{ color:#ee0979 !important }',
     '.bj-ws-term-pill.has-card-dc.active .bj-ws-term-price{ color:#ee0979 !important }',
+    /* v0.5.33: pill 2행 마크업 + "카드/정가" 라벨 */
+    '.bj-ws-term-pill-2row{',
+    '  flex-direction:column !important; gap:2px !important;',
+    '  padding:5px 10px !important; align-items:center !important;',
+    '}',
+    '.bj-ws-term-row1, .bj-ws-term-row2{',
+    '  display:inline-flex !important; align-items:center !important;',
+    '  gap:4px !important; line-height:1.2 !important;',
+    '}',
+    '.bj-ws-term-price-lbl{',
+    '  font-size:9px !important; font-weight:700 !important;',
+    '  padding:1px 4px !important; border-radius:3px !important;',
+    '  letter-spacing:0.2px !important; line-height:1.2 !important;',
+    '}',
+    '.bj-ws-lbl-card{ background:#ffe1ee !important; color:#ee0979 !important }',
+    '.bj-ws-lbl-orig{ background:#eef0f2 !important; color:#777 !important }',
+    /* row2 안의 분리점 제거 (2행 마크업에선 라벨이 명시되어 불필요) */
+    '.bj-ws-term-pill-2row .bj-ws-term-row2 > span + span::before{ content:none !important }',
+    '.bj-ws-term-pill-2row .bj-ws-term-row1 > span + span::before{ content:none !important }',
     /* v0.5.7+v0.5.26: BEST 배지 — absolute → inline 변경 (pill 안에 자연스럽게 배치) */
     '.bj-ws-term-pill{ position:relative !important }',
     '.bj-ws-best-badge{',
@@ -733,6 +752,9 @@
     '  -webkit-overflow-scrolling:touch;',
     '  scrollbar-width:none; -ms-overflow-style:none;',
     '  margin:6px 0 8px !important; padding:2px 2px 4px !important;',
+    /* v0.5.33: flex row 부모(.bj-fb-option-box) 안에서 가로 스크롤 보장 */
+    '  flex:1 1 0 !important; min-width:0 !important; max-width:100% !important;',
+    '  box-sizing:border-box !important;',
     '}',
     '.bj-option-buttons::-webkit-scrollbar{ display:none }',
     '.bj-option-btn{',
@@ -1501,16 +1523,22 @@
     buildOptionButtonGroup(wrapper, select, refreshChip);
   }
 
-  /* v0.5.18: 옵션 select를 가로 버튼 그룹으로 렌더 (≤4개 + 평균 글자 ≤8자) */
+  /* v0.5.33: 옵션을 항상 버튼 그룹으로 렌더 — 옵션 개수·라벨 길이 제한 폐기.
+     native select가 fixed wrapper + z-index 환경에서 클릭이 안 되는 케이스(특히 iOS Safari)를
+     원천 해결. 라벨은 짧게 표시(접두어/모델코드 제거), 가로 1행 스크롤로 무제한 옵션 수용.
+     select는 hide하되 DOM에 유지(빌리조 onchange 동기화용 ground-truth). */
+  function shortenOptionLabel(text){
+    text = String(text || '').trim();
+    /* 후미 모델코드 제거: " WB", " AS", " CB" 등 (공백 + 영문 2-4자) */
+    text = text.replace(/\s+[A-Z]{2,4}\s*$/, '');
+    /* 흔한 접두어 제거 — 색상명/사이즈 핵심만 노출 */
+    text = text.replace(/^(솔리드|메탈릭|메탈|매트|글로시|펄|유광|무광|하이드로|프리미엄|디럭스|스탠다드|일반|기본|컬러)\s*/, '');
+    return text || '옵션';
+  }
   function buildOptionButtonGroup(wrapper, select, refreshChip){
     if (!select || select.dataset.bjOptionGroupBuilt) return;
-    /* placeholder 제외한 실제 옵션 */
     var realOpts = Array.from(select.options).filter(function(o){ return o.value !== ''; });
-    if (realOpts.length === 0 || realOpts.length > 4) return;
-    /* 옵션 라벨 평균 길이 — 길면 줄바꿈으로 버튼이 커지니 select 유지 */
-    var avgLen = realOpts.reduce(function(s,o){ return s + o.textContent.trim().length; }, 0) / realOpts.length;
-    if (avgLen > 10) return;
-    /* 버튼 그룹 컨테이너 — select 직전에 삽입 */
+    if (realOpts.length === 0) return;
     var group = document.createElement('div');
     group.className = 'bj-option-buttons';
     group.setAttribute('role', 'radiogroup');
@@ -1521,10 +1549,15 @@
       btn.className = 'bj-option-btn';
       btn.dataset.value = opt.value;
       btn.setAttribute('role', 'radio');
-      btn.textContent = opt.textContent.trim();
+      var fullLabel = opt.textContent.trim();
+      btn.textContent = shortenOptionLabel(fullLabel);
+      btn.title = fullLabel; /* hover tooltip — 전체 옵션명 */
       if (select.value === opt.value) btn.classList.add('active');
-      btn.addEventListener('click', function(){
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
         select.value = opt.value;
+        /* cloneSelect의 change 핸들러가 orig.value + window.option_selec 자동 호출 */
         try { select.dispatchEvent(new Event('change', { bubbles: true })); } catch(_){}
         refreshGroup();
       });
@@ -1537,7 +1570,8 @@
     }
     select.parentNode.insertBefore(group, select);
     select.classList.add('bj-option-select-replaced');
-    /* select 변경 외부에서도 group sync */
+    /* v0.5.33: select 자체는 hide (버튼이 ground-truth UI). 빌리조 sync용으로 DOM 유지 */
+    select.style.setProperty('display', 'none', 'important');
     select.addEventListener('change', refreshGroup);
     select.dataset.bjOptionGroupBuilt = '1';
   }
@@ -1649,17 +1683,29 @@
       var termPills =
         '<div class="bj-ws-term-pills">' +
           sup.terms.map(function(t, i){
-            /* v0.5.32: 카드할인 있으면 카드가 메인 + 정가 strike-through 보조 노출.
-               컴팩트 유지하면서 제휴카드 할인 정보 함께 출력. */
+            /* v0.5.33: pill 2행 마크업 — "카드/정가" 라벨로 명확 구분.
+               1행: BEST 배지 + 약정 기간
+               2행: 카드할인 있으면 [카드 N · 정가 M(strike)], 없으면 [정가 N]
+               기존 색상만으로 구분이 어려웠던 문제 해소. */
             var hasCardDc = t.effective > 0 && t.effective < t.priceNum;
-            var mainPrice = hasCardDc ? t.effective.toLocaleString() : (t.price || '문의');
-            var origLabel = hasCardDc ? '<span class="bj-ws-term-orig">' + t.price + '</span>' : '';
             var bestBadge = t.isBest ? '<span class="bj-ws-best-badge">BEST</span>' : '';
-            return '<button type="button" class="bj-ws-term-pill' + (i === state.termIdx ? ' active' : '') + (t.isBest ? ' is-best' : '') + (hasCardDc ? ' has-card-dc' : '') + '" data-i="' + i + '">' +
-              bestBadge +
-              '<span class="bj-ws-term-period">' + escapeWidgetHtml(t.month) + '</span>' +
-              '<span class="bj-ws-term-price">' + escapeWidgetHtml(mainPrice) + '</span>' +
-              origLabel +
+            var priceRow;
+            if (hasCardDc) {
+              priceRow =
+                '<span class="bj-ws-term-price-lbl bj-ws-lbl-card">카드</span>' +
+                '<span class="bj-ws-term-price">' + escapeWidgetHtml(t.effective.toLocaleString()) + '</span>' +
+                '<span class="bj-ws-term-price-lbl bj-ws-lbl-orig">정가</span>' +
+                '<span class="bj-ws-term-orig">' + escapeWidgetHtml(t.price) + '</span>';
+            } else {
+              priceRow =
+                '<span class="bj-ws-term-price-lbl bj-ws-lbl-orig">정가</span>' +
+                '<span class="bj-ws-term-price">' + escapeWidgetHtml(t.price || '문의') + '</span>';
+            }
+            return '<button type="button" class="bj-ws-term-pill bj-ws-term-pill-2row' + (i === state.termIdx ? ' active' : '') + (t.isBest ? ' is-best' : '') + (hasCardDc ? ' has-card-dc' : '') + '" data-i="' + i + '">' +
+              '<div class="bj-ws-term-row1">' + bestBadge +
+                '<span class="bj-ws-term-period">' + escapeWidgetHtml(t.month) + '</span>' +
+              '</div>' +
+              '<div class="bj-ws-term-row2">' + priceRow + '</div>' +
             '</button>';
           }).join('') +
         '</div>';
