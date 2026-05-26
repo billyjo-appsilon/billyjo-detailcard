@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.4.0 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.10 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -839,11 +839,13 @@
 
     /* === v0.5.0: .help-pop ⓘ 툴팁 — 전 페이지 어디서든 viewport 안에 들어오게 강제 ===
        (이전 v0.3.5는 #ai-card-root 스코프 한정 + max-width:600px만 sheet 전환 → 601~900px에서 새는 문제 해결) */
-    /* 데스크탑(≥901px) — absolute 위치 유지하되 viewport 폭에 안전하게 clamp */
+    /* 데스크탑(≥901px) — absolute 위치 유지하되 viewport 폭에 안전하게 clamp
+       v0.5.10: JS 위치 보정 (setupHelpClose에서 transform 조정) 시 부드럽게 슬라이드되도록 transition */
     '.help-pop, #ai-card-root .help-pop{',
     '  max-width:min(280px, calc(100vw - 24px)) !important;',
     '  word-break:keep-all;',
     '  box-sizing:border-box !important;',
+    '  transition:transform 0.12s ease-out;',
     '}',
     /* 좁은 화면(≤900px) — 항상 viewport bottom-sheet로 전환 (이전 600px → 900px 확대) */
     '@media (max-width:900px){',
@@ -1284,11 +1286,30 @@
     document.addEventListener('touchstart', closeOutside, { capture: true, passive: true });
     document.addEventListener('toggle', function(e){
       var t = e.target;
-      if (t && t.tagName === 'DETAILS' && t.classList.contains('help') && t.open) {
-        document.querySelectorAll('details.help[open]').forEach(function(d){
-          if (d !== t) d.removeAttribute('open');
-        });
-      }
+      if (!(t && t.tagName === 'DETAILS' && t.classList.contains('help') && t.open)) return;
+      /* 다른 help 닫기 */
+      document.querySelectorAll('details.help[open]').forEach(function(d){
+        if (d !== t) d.removeAttribute('open');
+      });
+      /* v0.5.10: PC viewport 위치 보정 — popup이 viewport 좌/우 경계 잘리면 transform으로 끌어당김
+         (모바일 ≤900px은 이미 fixed bottom sheet라 viewport 안 보장됨) */
+      if (window.innerWidth <= 900) return;
+      var pop = t.querySelector('.help-pop');
+      if (!pop) return;
+      /* transform 초기화 후 한 프레임 뒤 측정 */
+      pop.style.transform = 'translateX(-50%)';
+      requestAnimationFrame(function(){
+        var rect = pop.getBoundingClientRect();
+        var vw = window.innerWidth;
+        var margin = 12;
+        if (rect.right > vw - margin) {
+          var overflow = rect.right - (vw - margin);
+          pop.style.transform = 'translateX(calc(-50% - ' + overflow + 'px))';
+        } else if (rect.left < margin) {
+          var shortfall = margin - rect.left;
+          pop.style.transform = 'translateX(calc(-50% + ' + shortfall + 'px))';
+        }
+      });
     }, true);
     /* ESC 키로도 닫기 (접근성) */
     document.addEventListener('keydown', function(e){
