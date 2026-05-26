@@ -543,6 +543,42 @@
     '.bj-ws-term-period{ font-size:11px; color:#666; font-weight:500 }',
     '.bj-ws-term-price{ font-size:14px; font-weight:700; color:#0838F8 }',
     '.bj-ws-term-pill.active .bj-ws-term-price{ color:#0838F8 }',
+    /* v0.5.7: BEST 자동 선택 + 카드할인 보조 라벨 */
+    '.bj-ws-term-pill{ position:relative !important }',
+    '.bj-ws-best-badge{',
+    '  position:absolute !important; top:-7px !important; right:-4px !important;',
+    '  background:linear-gradient(135deg,#ff6a00 0%,#ee0979 100%) !important;',
+    '  color:#fff !important; font-size:9.5px !important; font-weight:800 !important;',
+    '  padding:2px 6px !important; border-radius:10px !important; letter-spacing:0.4px !important;',
+    '  box-shadow:0 2px 6px rgba(238,9,121,0.35) !important; line-height:1 !important;',
+    '  font-family:Pretendard,sans-serif !important;',
+    '}',
+    '.bj-ws-term-pill.is-best{',
+    '  border-color:#ee0979 !important; background:linear-gradient(180deg,#fff5fa 0%,#fff 100%) !important;',
+    '}',
+    '.bj-ws-term-pill.is-best .bj-ws-term-price{ color:#ee0979 !important }',
+    '.bj-ws-term-pill.is-best.active{',
+    '  border-color:#ee0979 !important; background:#fff0f6 !important;',
+    '  box-shadow:0 0 0 2px rgba(238,9,121,0.15) !important;',
+    '}',
+    '.bj-ws-term-eff{',
+    '  font-size:10.5px !important; color:#ee0979 !important; font-weight:600 !important;',
+    '  margin-top:2px !important;',
+    '}',
+    '.bj-ws-best-dot{',
+    '  display:inline-block !important; width:6px !important; height:6px !important;',
+    '  margin-left:5px !important; border-radius:50% !important;',
+    '  background:#ee0979 !important; vertical-align:middle !important;',
+    '}',
+    /* 핸들 BEST 라벨 */
+    '.bj-bar-handle-best{',
+    '  display:inline-block !important;',
+    '  background:linear-gradient(135deg,#ff6a00 0%,#ee0979 100%) !important;',
+    '  color:#fff !important; font-size:9.5px !important; font-weight:800 !important;',
+    '  padding:2px 6px !important; border-radius:8px !important; letter-spacing:0.4px !important;',
+    '  margin-right:6px !important; vertical-align:middle !important;',
+    '  line-height:1.2 !important; font-family:Pretendard,sans-serif !important;',
+    '}',
     '@media (max-width:600px){',
     '  .bj-ws-sup-tab{ padding:5px 10px !important; font-size:11.5px !important }',
     '  .bj-ws-term-pill{ padding:8px 10px !important; min-width:96px !important }',
@@ -1026,17 +1062,32 @@
     if (lis.length === 0) return;
 
     /* 데이터 수집 */
+    function digits(s){ return parseInt(String(s||'').replace(/[^\d]/g,''),10) || 0; }
     var suppliers = lis.map(function(li){
       var nameEl = li.querySelector('.m_ver_txt .name, .txt .name');
       var boxes = Array.from(li.querySelectorAll('.month_box'));
       var terms = boxes.map(function(b){
+        var price = b.dataset.price || ((b.querySelector('.fz16')||{}).textContent || '').replace(/[^\d,]/g,'');
+        var dcprice = b.dataset.dcprice || '0';  /* 카드할인 적용 후 금액 (있으면) */
+        var cardDis = b.dataset.card_dis || '0';  /* 카드할인 액수 */
+        var priceNum = digits(price);
+        var dcNum = digits(dcprice);
+        var cardDisNum = digits(cardDis);
+        /* 최종 월 부담액: dcprice가 있고 0보다 크면 그것, 아니면 price - cardDis 추정, 아니면 price */
+        var effective = dcNum > 0 ? dcNum :
+                        (cardDisNum > 0 && cardDisNum < priceNum) ? (priceNum - cardDisNum) :
+                        priceNum;
         return {
           el: b,
           month: b.dataset.month || (b.querySelector('.fz14')||{}).textContent || '',
           monthKey: b.dataset.month_key,
-          price: b.dataset.price || ((b.querySelector('.fz16')||{}).textContent || '').replace(/[^\d,]/g,''),
-          dcprice: b.dataset.dcprice || '0',
-          cardDis: b.dataset.card_dis || '0',
+          price: price,
+          priceNum: priceNum,
+          dcprice: dcprice,
+          dcNum: dcNum,
+          cardDis: cardDis,
+          cardDisNum: cardDisNum,
+          effective: effective,    /* 가성비 비교의 기준 — 카드할인 적용 후 월 부담액 */
           supname: b.dataset.supname,
           supcode: b.dataset.supcode,
         };
@@ -1048,6 +1099,23 @@
       };
     }).filter(function(s){ return s.terms.length > 0; });
     if (suppliers.length === 0) return;
+
+    /* v0.5.7: BEST 자동 선택 — 모든 (렌탈사 × 약정) 조합에서 effective(카드할인 후 월 부담액) 최저.
+       동률이면 약정 길이 짧은 쪽 우선(약속 부담 적은 게 유리). */
+    var bestSupIdx = 0, bestTermIdx = 0, bestEff = Infinity, bestMonths = Infinity;
+    suppliers.forEach(function(s, si){
+      s.terms.forEach(function(t, ti){
+        if (t.effective <= 0) return;
+        var months = digits(t.month);
+        if (t.effective < bestEff || (t.effective === bestEff && months < bestMonths)) {
+          bestEff = t.effective;
+          bestMonths = months;
+          bestSupIdx = si;
+          bestTermIdx = ti;
+        }
+      });
+    });
+    suppliers[bestSupIdx].terms[bestTermIdx].isBest = true;
 
     /* selector mount 위치 — bb-inner 있으면 .bb-months 교체, 없으면 fallback .bj-fb-selector */
     var bbInner = wrapper.querySelector('.bb-inner');
@@ -1064,18 +1132,24 @@
       mount.classList.add('bj-widget-selector');
     }
 
-    var state = { supIdx: 0, termIdx: 0 };
+    /* v0.5.7: 초기 선택을 BEST로 — 사용자가 보자마자 가성비 최고 옵션을 보게 됨 */
+    var state = { supIdx: bestSupIdx, termIdx: bestTermIdx };
 
     function render(){
       var sup = suppliers[state.supIdx];
       var term = sup.terms[state.termIdx];
       var multiSupplier = suppliers.length > 1;
+      /* 다중 렌탈사면 supplier 탭에 BEST 표시 (해당 supplier 안에 best term 있으면) */
+      var supHasBest = function(si){
+        return suppliers[si].terms.some(function(t){ return t.isBest; });
+      };
 
       var supTabs = multiSupplier
         ? '<div class="bj-ws-sup-tabs">' +
             suppliers.map(function(s, i){
+              var bestMark = supHasBest(i) ? '<span class="bj-ws-best-dot" aria-label="BEST"></span>' : '';
               return '<button type="button" class="bj-ws-sup-tab' + (i === state.supIdx ? ' active' : '') + '" data-i="' + i + '">' +
-                escapeWidgetHtml(s.name) +
+                escapeWidgetHtml(s.name) + bestMark +
               '</button>';
             }).join('') +
           '</div>'
@@ -1085,18 +1159,34 @@
         '<div class="bj-ws-term-pills">' +
           sup.terms.map(function(t, i){
             var monthly = t.price ? '월 ' + t.price + '원' : '문의';
-            return '<button type="button" class="bj-ws-term-pill' + (i === state.termIdx ? ' active' : '') + '" data-i="' + i + '">' +
+            /* 카드할인 적용가 — effective와 priceNum 차이 있을 때 보조 라벨 */
+            var hasCardDc = t.effective > 0 && t.effective < t.priceNum;
+            var effLabel = hasCardDc ? '<span class="bj-ws-term-eff">카드 월 ' + t.effective.toLocaleString() + '원</span>' : '';
+            var bestBadge = t.isBest ? '<span class="bj-ws-best-badge">BEST</span>' : '';
+            return '<button type="button" class="bj-ws-term-pill' + (i === state.termIdx ? ' active' : '') + (t.isBest ? ' is-best' : '') + '" data-i="' + i + '">' +
+              bestBadge +
               '<span class="bj-ws-term-period">' + escapeWidgetHtml(t.month) + '</span>' +
               '<span class="bj-ws-term-price">' + escapeWidgetHtml(monthly) + '</span>' +
+              effLabel +
             '</button>';
           }).join('') +
         '</div>';
 
       mount.innerHTML = supTabs + termPills;
 
-      /* 핸들 가격 갱신 */
+      /* v0.5.7: 핸들 가격 — 카드할인 있으면 "월 N원 (카드 M원)" 형식, BEST면 라벨 추가 */
       var hp = handle.querySelector('.bj-bar-handle-price');
-      if (hp) hp.textContent = term.price ? '월 ' + term.price + '원' : '';
+      if (hp) {
+        var hasCardDc = term.effective > 0 && term.effective < term.priceNum;
+        var bestTag = term.isBest ? '<span class="bj-bar-handle-best">BEST</span>' : '';
+        if (hasCardDc) {
+          hp.innerHTML = bestTag + '카드 월 ' + term.effective.toLocaleString() + '원 <small style="color:#888;font-weight:400;font-size:11px">(정가 월 ' + term.price + '원)</small>';
+        } else if (term.price) {
+          hp.innerHTML = bestTag + '월 ' + term.price + '원';
+        } else {
+          hp.innerHTML = bestTag + '문의';
+        }
+      }
     }
 
     function selectSupplier(i){
