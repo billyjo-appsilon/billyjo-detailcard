@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.29 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.30 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -536,12 +536,17 @@
     '.bj-widget-selector{',
     '  display:flex !important; flex-direction:column !important;',
     '  gap:10px !important;',
+    /* v0.5.30: flex column 자식의 default min-width:auto가 .bj-ws-term-pills를
+       콘텐츠 너비로 확장시켜 overflow-x:auto가 무력화됨 → 약정 pill 가로 스크롤 안 됨.
+       부모/자식 모두 min-width:0 + max-width:100%로 viewport 폭 강제. */
+    '  min-width:0 !important; max-width:100% !important; width:100% !important;',
     '}',
     /* v0.5.8: 다중 렌탈사 섹션 — "렌탈사 선택" 라벨 + 탭 + "{이름}의 약정 조건" 라벨 */
     '.bj-ws-sup-section{',
     '  display:flex !important; flex-direction:column !important; gap:6px !important;',
     '  padding-bottom:10px !important;',
     '  border-bottom:0.5px dashed #e5e5e5 !important;',
+    '  min-width:0 !important; max-width:100% !important; width:100% !important;',
     '}',
     '.bj-ws-sup-label{',
     '  font-size:11px; color:#888; font-weight:600;',
@@ -572,7 +577,9 @@
     '  background:#0838F8 !important; color:#fff !important;',
     '  border-color:#0838F8 !important;',
     '}',
-    /* v0.5.18: 약정 pill 1행 가로 스와이프 + 컴팩트화 (이전 2행 wrap → 1행 nowrap) */
+    /* v0.5.18: 약정 pill 1행 가로 스와이프 + 컴팩트화 (이전 2행 wrap → 1행 nowrap)
+       v0.5.30: min-width:0 + max-width:100% — flex column 부모 안에서 overflow-x:auto
+       동작 보장 (콘텐츠 너비로 늘어나면 스크롤 영역 인지 안 됨). */
     '.bj-ws-term-pills{',
     '  display:flex !important; gap:6px !important;',
     '  flex-wrap:nowrap !important;',
@@ -581,6 +588,8 @@
     '  scrollbar-width:none; -ms-overflow-style:none;',
     '  padding:2px 2px 4px !important;',
     '  margin:0 -2px !important;',
+    '  min-width:0 !important; max-width:100% !important; width:100% !important;',
+    '  box-sizing:border-box !important;',
     '}',
     '.bj-ws-term-pills::-webkit-scrollbar{ display:none }',
     /* v0.5.19: pill을 완전 1행 — period · price · eff 가로 배치 + 구분점 */
@@ -789,13 +798,21 @@
     '.bj-bb-inner-merged .bb-left, .bj-bb-inner-merged .bb-right{',
     '  display:contents !important;',
     '}',
-    /* 약정 pill 행 — 가로 배치, 클릭형 카드 */
+    /* 약정 pill 행 — 가로 배치, 클릭형 카드.
+       v0.5.30: flex-wrap:wrap → nowrap + overflow-x:auto. 약정 많은 케이스(LG·코웨이)
+       에서 2-3행 wrap이 화면 점거 + 가로 스크롤 못해 일부 약정 선택 불가능 → 1행 스크롤 통일. */
     '.bj-bb-inner-merged .bb-months{',
-    '  display:flex !important; gap:8px !important; flex-wrap:wrap !important;',
-    '  margin:0 !important;',
+    '  display:flex !important; gap:8px !important; flex-wrap:nowrap !important;',
+    '  overflow-x:auto !important; overflow-y:hidden !important;',
+    '  -webkit-overflow-scrolling:touch;',
+    '  scrollbar-width:none; -ms-overflow-style:none;',
+    '  margin:0 !important; padding:2px 0 4px !important;',
+    '  min-width:0 !important; max-width:100% !important; width:100% !important;',
+    '  box-sizing:border-box !important;',
     '}',
+    '.bj-bb-inner-merged .bb-months::-webkit-scrollbar{ display:none }',
     '.bj-bb-inner-merged .bb-month-pill{',
-    '  flex:1 1 0 !important; min-width:120px !important;',
+    '  flex:0 0 auto !important; min-width:120px !important;',
     '  padding:10px 12px !important;',
     '  border:1px solid #dfdfdf !important; border-radius:10px !important;',
     '  background:#fafafa !important;',
