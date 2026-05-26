@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.21 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.22 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1029,6 +1029,17 @@
     '  pointer-events:none !important;',
     '  height:0 !important;',
     '  overflow:hidden !important;',
+    '}',
+
+    /* === v0.5.22: 격상 안 된 .bb-inner는 어디에 있든 무조건 숨김 ===
+       빌리조 main inject.js가 .bb-inner를 wrapper(.prod_view_bot.card.mt40) 안/밖 어디든
+       동적 mount. 우리 enhanceBottomBar가 격상하면 .bj-bb-inner-merged 클래스 부착 → 보임.
+       격상 안 된 .bb-inner는 무조건 hide → wrapper 위치·timing 무관하게 안전. */
+    'body .bb-inner:not(.bj-bb-inner-merged){',
+    '  display:none !important;',
+    '  visibility:hidden !important;',
+    '  pointer-events:none !important;',
+    '  height:0 !important; overflow:hidden !important;',
     '}',
 
     /* === v0.5.20: 업소용 카테고리(prod_list/10-1153) 노출 복원 ===
