@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.15 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.16 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -181,7 +181,10 @@
   });
 
   // 페이지 가드 — 제품 상세에서만 실행 (이하 prod_view 전용)
-  if (!/\/html\/dh_prod\/prod_view\//.test(location.pathname)) return;
+  /* v0.5.16: 데모 도메인(.vercel.app)에서도 작동하도록 가드 완화 + window.__bjForceLoad flag */
+  if (!/\/html\/dh_prod\/prod_view\//.test(location.pathname) &&
+      !/\.vercel\.app$/.test(location.hostname) &&
+      !window.__bjForceLoad) return;
 
   // 중복 로드 방지
   if (window.__bjDetailcardLoaded) return;
@@ -1600,21 +1603,25 @@
 
     var SESSION_KEY = 'bjBarDismissed_' + (location.pathname.match(/prod_view\/(\d+)/) || [,'unknown'])[1];
     var manualHide = (function(){ try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch(e){ return false; } })();
-    var pastTrigger = false;
-    var shownOnce = false;  // sticky — 한 번 노출되면 자동 hide 안 함
+    var showBar = false;
 
+    /* v0.5.16: bidirectional — AI 카드가 viewport에서 사라지면 show, 다시 나타나면 hide.
+       이전 sticky 방식(한 번 노출되면 영구)이 위로 스크롤 시 카드와 위젯 동시 노출되어
+       사용자가 거슬려함. 자연스러운 CTA UX: 카드를 보면 카드만, 카드 지나면 위젯 등장. */
     function evalScroll(){
       var r = aiCard.getBoundingClientRect();
-      // 트리거: 카드 bottom이 viewport top 위로 완전히 올라감 (사용자가 카드 전체를 다 봄)
-      if (r.bottom < 0) {
-        pastTrigger = true;
-        shownOnce = true;
-      }
-      // sticky — 한 번 trigger 발동 후엔 스크롤 위치 무관하게 노출 상태 유지 (manualHide 우선)
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      /* 카드가 viewport에서 거의 사라짐 (bottom < 80px 여유) — 위젯 show */
+      var cardOutOfView = r.bottom < 80;
+      /* 카드가 viewport에 충분히 들어옴 (bottom > 200px) — 위젯 hide */
+      var cardInView = r.bottom > 200;
+      if (cardOutOfView) showBar = true;
+      else if (cardInView) showBar = false;
+      /* 중간 영역 (80px ~ 200px)에서는 직전 상태 유지 — 깜빡임 방지 hysteresis */
       apply();
     }
     function apply(){
-      var show = (pastTrigger || shownOnce) && !manualHide;
+      var show = showBar && !manualHide;
       /* v0.5.3: display:block 항상 강제 (billyjo underlying이 display:none 설정) */
       wrapper.style.setProperty('display', 'block', 'important');
       if (show) {
