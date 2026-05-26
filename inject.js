@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.12 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.13 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -447,13 +447,26 @@
     '}',
     'body #container .wide-inner > .prod_view_bot.card.mt40.bj-bar-expanded,',
     '.prod_view_bot.card.mt40.bj-bar-expanded{ max-height:520px !important }',
+    /* v0.5.13: collapsed max-height 64→56px (핸들 1행만 보이므로 더 콤팩트) */
     'body #container .wide-inner > .prod_view_bot.card.mt40.bj-bar-collapsed,',
-    '.prod_view_bot.card.mt40.bj-bar-collapsed{ max-height:64px !important }',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed{ max-height:56px !important; overflow:hidden !important }',
+    /* v0.5.13: collapsed 시 핸들만 노출 — 모든 fallback 콘텐츠 숨김 (렌탈사 selector·약정 pill·3버튼 영역 포함) */
     '.prod_view_bot.card.mt40.bj-bar-collapsed .card__top,',
     '.prod_view_bot.card.mt40.bj-bar-collapsed .card__tit,',
     '.prod_view_bot.card.mt40.bj-bar-collapsed .rantal_wrap,',
     '.prod_view_bot.card.mt40.bj-bar-collapsed .bb-left,',
-    '.prod_view_bot.card.mt40.bj-bar-collapsed .bb-right-bottom{',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bb-right-bottom,',
+    /* v0.5.13: fallback 콘텐츠 (.bj-bar-fallback 자체 + 내부 selector·버튼) 숨김 */
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-bar-fallback,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-fb-selector,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-widget-selector,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-ws-sup-section,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-ws-term-pills,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-fb-info,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-fb-btns,',
+    /* .bb-inner 자체도 숨김 (안에 .bb-product-name·.bb-months 등이 보일 수 있음) */
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bb-inner,',
+    '.prod_view_bot.card.mt40.bj-bar-collapsed .bb-right{',
     '  display:none !important;',
     '}',
     '.prod_view_bot.card.mt40.bj-bar-expanded .bb-inner,',
@@ -769,7 +782,7 @@
     '  .prod_view_bot.card.mt40 .bb-inner{ padding:12px 14px !important }',
     '  .bj-btn-consult{ padding:9px 11px; font-size:12.5px }',
     '  .bb-btn-rent.bj-btn-rent-gift{ font-size:13px }',
-    '  .prod_view_bot.card.mt40.bj-bar-collapsed{ max-height:58px !important }',
+    '  .prod_view_bot.card.mt40.bj-bar-collapsed{ max-height:52px !important }',
     '}',
 
     /* === v0.3.4: 카드 너비 확장 (.wide-inner 1480px) === */
