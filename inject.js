@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.10 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.11 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -874,6 +874,21 @@
     '@keyframes bjHelpPopIn{',
     '  from{ opacity:0; transform:translateY(20px) }',
     '  to{ opacity:1; transform:translateY(0) }',
+    '}',
+
+    /* === v0.5.11: 빌리조 원본 2버튼 sticky 위젯(.prod_fix_wrap) 제거 ===
+       우리 v0.5.x 위젯(.prod_view_bot.card.mt40 → fixed bottom)과 중복으로 떠 있어
+       사용자 혼란 발생. 빌리조 원본 [장바구니][렌탈신청] 2버튼 sticky bar를 완전 숨김.
+       PC: .prod_fix_wrap.prod_fix
+       모바일: .prod_fix_wrap.prod_fix_m */
+    '.prod_fix_wrap,',
+    '.prod_fix_wrap.prod_fix,',
+    '.prod_fix_wrap.prod_fix_m{',
+    '  display:none !important;',
+    '  visibility:hidden !important;',
+    '  pointer-events:none !important;',
+    '  height:0 !important;',
+    '  overflow:hidden !important;',
     '}'
   ].join('\n');
 
@@ -1973,6 +1988,14 @@
     wrap.insertBefore(link, wrap.firstChild);
   }
 
+  /* v0.5.11: 빌리조 원본 2버튼 sticky 위젯 제거 안전망 (CSS 외 JS도 마크업 제거) */
+  function removeOriginalStickyWidget(){
+    document.querySelectorAll('.prod_fix_wrap').forEach(function(el){
+      el.style.display = 'none';
+      el.setAttribute('data-bj-removed', '1');
+    });
+  }
+
   function runAll(){
     injectCSS();
     tagHeaderDom();
@@ -1984,6 +2007,7 @@
     hideOriginalSpecsAndSimplifyLpt();
     setupBottomBarVisibility();
     injectNewlywedGnb();
+    removeOriginalStickyWidget();
   }
 
   injectCSS();      // CSS 즉시 — head 있으면
