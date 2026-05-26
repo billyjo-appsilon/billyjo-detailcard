@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.19 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.20 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1029,6 +1029,18 @@
     '  pointer-events:none !important;',
     '  height:0 !important;',
     '  overflow:hidden !important;',
+    '}',
+
+    /* === v0.5.20: 업소용 카테고리(prod_list/10-1153) 노출 복원 ===
+       빌리조 main inject.js가 prod_list/10-* 일괄 숨김 처리 중. 우리가 메인 1153만 다시 노출.
+       cascade 후순(detailcard가 inject보다 늦게 로드) + 같은 specificity로 override. */
+    '.category__wrap a[href*="prod_list/10-1153"],',
+    '.gnb__menu a[href*="prod_list/10-1153"],',
+    'ul.all__depth1 a[id="10"],',
+    'li.gnb__menu:has(> a[href*="prod_list/10-1153"]),',
+    '.menu__gsnb a[href*="prod_list/10-1153"],',
+    '.aside_sub a[href*="prod_list/10-1153"]{',
+    '  display:revert !important; visibility:visible !important;',
     '}'
   ].join('\n');
 
@@ -2340,6 +2352,44 @@
     });
   }
 
+  /* v0.5.20: 업소용 카테고리 노출 — main inject.js가 hide한 prod_list/10-1153을 복원 +
+     라벨 "업소용·창업" → "업소용"으로 단축. */
+  function showBusinessCategory(){
+    /* 전체 페이지 + 헤더 + .category__wrap + .menu__gsnb + .aside_sub + .all__depth1 */
+    document.querySelectorAll('a[href*="prod_list/10-1153"]').forEach(function(a){
+      a.style.setProperty('display', '', 'important');  /* 인라인 display 복원 */
+      a.style.setProperty('visibility', 'visible', 'important');
+      var li = a.closest('li');
+      if (li) {
+        li.style.setProperty('display', '', 'important');
+        li.style.setProperty('visibility', 'visible', 'important');
+      }
+      /* 텍스트 단축 "업소용·창업" → "업소용" */
+      if (a.textContent && a.textContent.trim() === '업소용·창업') {
+        /* 자식 노드가 단순 텍스트면 변경, 아니면 첫 텍스트 노드만 변경 (이미지·svg 보존) */
+        if (a.children.length === 0) {
+          a.textContent = '업소용';
+        } else {
+          for (var i = 0; i < a.childNodes.length; i++) {
+            var n = a.childNodes[i];
+            if (n.nodeType === 3 && n.textContent.trim() === '업소용·창업') {
+              n.textContent = '업소용';
+              break;
+            }
+          }
+        }
+      }
+    });
+    /* all__depth1 같이 id 기반 항목도 처리 */
+    document.querySelectorAll('ul.all__depth1 a[id="10"]').forEach(function(a){
+      a.style.setProperty('display', '', 'important');
+      a.style.setProperty('visibility', 'visible', 'important');
+      var li = a.closest('li');
+      if (li) li.style.setProperty('display', '', 'important');
+      if (a.textContent && a.textContent.trim() === '업소용·창업') a.textContent = '업소용';
+    });
+  }
+
   function runAll(){
     injectCSS();
     tagHeaderDom();
@@ -2352,6 +2402,7 @@
     setupBottomBarVisibility();
     injectNewlywedGnb();
     removeOriginalStickyWidget();
+    showBusinessCategory();
   }
 
   injectCSS();      // CSS 즉시 — head 있으면
