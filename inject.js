@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.24 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.25 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -859,6 +859,31 @@
     '  font-family:"Pretendard","Apple SD Gothic Neo",sans-serif !important;',
     '}',
     '.bj-fb-info{ display:flex; flex-direction:column; gap:2px; flex:0 1 auto; min-width:0 }',
+    /* v0.5.25: 옵션 select wrapper 박스 — fallback 위젯 안에 라벨+드롭다운 명확 노출 */
+    '.bj-fb-option-box{',
+    '  display:flex !important; flex-direction:row !important;',
+    '  align-items:center !important; gap:10px !important;',
+    '  margin:0 0 8px !important; padding:8px 12px !important;',
+    '  background:#f7f9ff !important;',
+    '  border:1px solid #d6e0fb !important; border-radius:8px !important;',
+    '  width:100% !important; flex:1 1 100% !important;',
+    '  font-family:Pretendard,sans-serif !important;',
+    '}',
+    '.bj-fb-option-label{',
+    '  font-size:12.5px !important; font-weight:700 !important; color:#0838F8 !important;',
+    '  flex:0 0 auto !important; white-space:nowrap !important;',
+    '}',
+    '.bj-fb-option-box .bb-option-select,',
+    '.bj-fb-option-box .option_select{',
+    '  flex:1 1 auto !important; margin:0 !important;',
+    '  width:auto !important; min-width:120px !important;',
+    '}',
+    '@media (max-width:600px){',
+    '  .bj-fb-option-box{ padding:7px 10px !important; gap:8px !important }',
+    '  .bj-fb-option-label{ font-size:12px !important }',
+    '  .bj-fb-option-box .bb-option-select,',
+    '  .bj-fb-option-box .option_select{ font-size:12px !important; min-width:100px !important; padding:7px 28px 7px 10px !important }',
+    '}',
     '.bj-fb-label{ font-size:11.5px; color:#6a6a6a; font-weight:600 }',
     '.bj-fb-price{ font-size:17px; font-weight:800; color:#0838F8; line-height:1.2 }',
     '.bj-fb-btns{',
@@ -1344,7 +1369,30 @@
           try { cloneSelect.dispatchEvent(new Event('change', { bubbles: true })); } catch(_){}
         }
       });
-      /* 삽입 위치: .bb-right-top > 맨 앞 (장바구니 버튼 위) 또는 fallback .bj-fb-btns 직전 */
+      /* v0.5.25: 삽입 위치 — 라벨 + select wrapper 박스로 감싸 명확히 노출 */
+      var optBox = document.createElement('div');
+      optBox.className = 'bj-fb-option-box';
+      /* select의 첫 option ("옵션을 선택해주세요.") 텍스트로 라벨 추론 */
+      var labelText = '옵션 선택';
+      /* 빌리조 페이지에서 select 가까이 "색상" 등 th 라벨 찾기 */
+      var nearTh = orig.closest('tr') && orig.closest('tr').querySelector('th');
+      if (nearTh && nearTh.textContent.trim()) {
+        labelText = nearTh.textContent.trim();
+      } else {
+        /* 페이지 .prod_table_wrap에서 색상 td 옆 th 찾기 시도 */
+        var ths = document.querySelectorAll('.prod_table th');
+        for (var ti = 0; ti < ths.length; ti++) {
+          if (/색상|컬러|옵션|타입|용량|사이즈/.test(ths[ti].textContent)) {
+            labelText = ths[ti].textContent.trim(); break;
+          }
+        }
+      }
+      var label = document.createElement('div');
+      label.className = 'bj-fb-option-label';
+      label.textContent = labelText + ' 선택';
+      optBox.appendChild(label);
+      optBox.appendChild(cloneSelect);
+
       var bbInner = wrapper.querySelector('.bb-inner');
       var rightTop = bbInner && bbInner.querySelector('.bb-right-top');
       if (rightTop) {
@@ -1352,8 +1400,8 @@
       } else {
         var fb = wrapper.querySelector('.bj-bar-fallback');
         var btns = fb && fb.querySelector('.bj-fb-btns');
-        if (btns) fb.insertBefore(cloneSelect, btns);
-        else if (fb) fb.appendChild(cloneSelect);
+        if (btns) fb.insertBefore(optBox, btns);
+        else if (fb) fb.appendChild(optBox);
       }
       select = cloneSelect;
     }
