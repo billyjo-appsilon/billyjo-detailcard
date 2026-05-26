@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.26 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.27 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1887,28 +1887,10 @@
       }
     }
 
-    // 우측 상단 X 버튼 (영구 dismiss — 세션 동안 유지)
-    if (!wrapper.querySelector('.bj-bar-dismiss-x')) {
-      var x = document.createElement('button');
-      x.className = 'bj-bar-dismiss-x';
-      x.type = 'button';
-      x.setAttribute('aria-label', '하단 위젯 닫기 (세션 동안)');
-      x.style.cssText = [
-        'position:absolute','top:6px','right:8px','width:28px','height:28px',
-        'border-radius:50%','background:rgba(255,255,255,0.85)','color:#333','border:0',
-        'font-size:16px','font-weight:700','cursor:pointer','z-index:100000',
-        'display:flex','align-items:center','justify-content:center',
-        'box-shadow:0 2px 6px rgba(0,0,0,0.15)',
-      ].join(';');
-      x.textContent = '✕';
-      x.onclick = function(e){
-        e.stopPropagation(); e.preventDefault();
-        manualHide = true;
-        try { sessionStorage.setItem(SESSION_KEY, '1'); } catch(_){}
-        apply();
-      };
-      wrapper.appendChild(x);
-    }
+    /* v0.5.27: 우측 상단 X 버튼 제거 — ▾ 토글과 기능 중복으로 사용자 혼란.
+       기존 인스턴스가 DOM에 남아있으면 제거 (CDN 캐시 stale 시점 데이터 정리) */
+    var prevX = wrapper.querySelector('.bj-bar-dismiss-x');
+    if (prevX) try { prevX.remove(); } catch(_){}
 
     // v0.5.2: 핸들 드래그 게스처
     setupHandleDragGesture(wrapper);
@@ -2523,6 +2505,29 @@
     });
   }
 
+  /* v0.5.27: 옵션 select 강제 보장 — 페이지에 .option_select 있고 우리 위젯에 없으면
+     매 runAll 사이클마다 syncOptionSelectToHandle 재실행. 옵션 있는 제품에서 반드시 노출. */
+  function ensureOptionSelect(){
+    var wrapper = document.querySelector('.prod_view_bot.card.mt40');
+    if (!wrapper) return;
+    /* 이미 위젯 안에 select 있으면 skip */
+    if (wrapper.querySelector('.bb-option-select, .option_select, .bj-option-clone')) return;
+    /* 페이지에 visible .option_select 있는지 빠르게 체크 */
+    var pageSelects = document.querySelectorAll('.option_select, .bb-option-select');
+    var hasOption = false;
+    for (var i = 0; i < pageSelects.length; i++) {
+      var s = pageSelects[i];
+      if (s.closest && s.closest('.prod_fix_wrap')) continue;
+      if (s.options && s.options.length > 1) { hasOption = true; break; }
+    }
+    if (!hasOption) return;
+    /* 핸들 찾기 */
+    var handle = wrapper.querySelector(':scope > .bj-bar-handle');
+    if (!handle) return;
+    /* syncOptionSelectToHandle 재실행 */
+    try { syncOptionSelectToHandle(wrapper, handle); } catch(e){}
+  }
+
   function runAll(){
     injectCSS();
     tagHeaderDom();
@@ -2538,6 +2543,7 @@
     showBusinessCategory();
     hideExternalBbInner();    /* v0.5.21: 매 호출마다 외부 .bb-inner 즉시 숨김 */
     watchForBbInner();        /* v0.5.21: 영구 옵저버 설치 (한 번만) */
+    ensureOptionSelect();     /* v0.5.27: 옵션 select 위젯에 노출 보장 */
   }
 
   injectCSS();      // CSS 즉시 — head 있으면
