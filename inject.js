@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.14 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.15 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -625,6 +625,56 @@
     '  margin-right:6px !important; vertical-align:middle !important;',
     '  line-height:1.2 !important; font-family:Pretendard,sans-serif !important;',
     '}',
+    /* v0.5.15: 핸들 옵션 칩 — 선택 옵션 표시 + 미선택 시 빨간 강조로 액션 유도 */
+    '.bj-bar-handle-option{',
+    '  display:inline-flex !important; align-items:center !important;',
+    '  padding:3px 9px 3px 9px !important;',
+    '  border-radius:999px !important;',
+    '  background:#e8edff !important; color:#0838F8 !important;',
+    '  font-size:11.5px !important; font-weight:700 !important;',
+    '  margin-right:8px !important; vertical-align:middle !important;',
+    '  line-height:1.2 !important; cursor:pointer !important;',
+    '  border:1px solid #c8d4f0 !important;',
+    '  font-family:Pretendard,sans-serif !important;',
+    '  max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',
+    '  transition:background 0.15s, border-color 0.15s;',
+    '}',
+    '.bj-bar-handle-option::before{',
+    '  content:"⚙ "; font-size:11px; margin-right:2px; opacity:0.85;',
+    '}',
+    '.bj-bar-handle-option:hover{',
+    '  background:#dde6ff !important; border-color:#0838F8 !important;',
+    '}',
+    '.bj-bar-handle-option.is-empty{',
+    '  background:#fef2f2 !important; color:#b91c1c !important;',
+    '  border-color:#fca5a5 !important;',
+    '  animation:bjOptionPulse 1.6s ease-in-out infinite;',
+    '}',
+    '.bj-bar-handle-option.is-empty::before{ content:"⚠ "; opacity:1 }',
+    '@keyframes bjOptionPulse{',
+    '  0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(220,38,38,0.35) }',
+    '  50%{ transform:scale(1.03); box-shadow:0 0 0 4px rgba(220,38,38,0) }',
+    '}',
+    /* v0.5.15: 위젯 펼친 영역의 .bb-option-select 스타일 — 가독성·터치 영역 확보 */
+    '.bj-bb-inner-merged .bb-option-select{',
+    '  width:100% !important; padding:11px 36px 11px 12px !important;',
+    '  border:1px solid #dfdfdf !important; border-radius:8px !important;',
+    '  font-size:13.5px !important; font-weight:600 !important;',
+    '  font-family:Pretendard,sans-serif !important;',
+    '  background:#fff !important; color:#2a2a2a !important;',
+    '  -webkit-appearance:none !important; appearance:none !important;',
+    '  background-image:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'><path d=\'M2 4l4 4 4-4\' stroke=\'%230838F8\' stroke-width=\'1.5\' fill=\'none\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/></svg>") !important;',
+    '  background-repeat:no-repeat !important; background-position:right 12px center !important;',
+    '  background-size:12px !important;',
+    '  margin:6px 0 8px !important;',
+    '  cursor:pointer !important;',
+    '  box-shadow:0 0 0 0 rgba(8,56,248,0) !important;',
+    '  transition:border-color 0.15s, box-shadow 0.15s;',
+    '}',
+    '.bj-bb-inner-merged .bb-option-select:focus{',
+    '  outline:none !important; border-color:#0838F8 !important;',
+    '  box-shadow:0 0 0 3px rgba(8,56,248,0.15) !important;',
+    '}',
     '@media (max-width:600px){',
     '  .bj-ws-sup-tab{ padding:5px 10px !important; font-size:11.5px !important }',
     '  .bj-ws-term-pill{ padding:8px 10px !important; min-width:96px !important }',
@@ -778,6 +828,7 @@
     '  .bj-bar-handle{ padding:14px 14px 8px }',
     '  .bj-bar-handle-text{ font-size:12px }',
     '  .bj-bar-handle-price{ font-size:13px }',
+    '  .bj-bar-handle-option{ font-size:11px !important; padding:2px 8px !important; max-width:90px; margin-right:6px !important }',
     '  .bj-bar-handle-toggle{ width:34px; height:22px; font-size:12px }',
     '  .prod_view_bot.card.mt40 .bb-inner{ padding:12px 14px !important }',
     '  .bj-btn-consult{ padding:9px 11px; font-size:12.5px }',
@@ -1137,7 +1188,62 @@
                 (2) 핸들 가격 + 위젯 가격 표시 갱신 */
     buildWidgetSelector(wrapper, handle);
 
+    /* v0.5.15: 옵션 select (.bb-option-select) 처리 — 핸들에 미러링 + 펼친 영역 스타일 */
+    syncOptionSelectToHandle(wrapper, handle);
+
+    /* v0.5.15: wrapper 외부에 떠 있는 .bb-inner는 강제 숨김 (이중 노출 방지) */
+    document.querySelectorAll('.bb-inner').forEach(function(inner){
+      if (!wrapper.contains(inner)) {
+        inner.style.setProperty('display', 'none', 'important');
+        inner.setAttribute('data-bj-extra-hidden', '1');
+      }
+    });
+
     wrapper.dataset.bjBarEnhanced = '1';
+  }
+
+  /* v0.5.15: 옵션 select를 핸들 옆에 미러링 + 옵션 변경 시 핸들 갱신.
+     옵션이 미선택이면 빨간 chip으로 표시 — 사용자 액션 유도. */
+  function syncOptionSelectToHandle(wrapper, handle){
+    var select = wrapper.querySelector('.bb-option-select');
+    if (!select) return;
+    var handleText = handle.querySelector('.bj-bar-handle-text');
+    if (!handleText) return;
+    /* 핸들 안 옵션 칩 ensure */
+    var chip = handleText.querySelector('.bj-bar-handle-option');
+    if (!chip) {
+      chip = document.createElement('span');
+      chip.className = 'bj-bar-handle-option';
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.setAttribute('aria-label', '옵션 선택');
+      handleText.insertBefore(chip, handleText.firstChild);
+      /* 칩 클릭 시 위젯 펼침 + select 포커스 */
+      chip.addEventListener('click', function(e){
+        e.stopPropagation();
+        wrapper.classList.remove('bj-bar-collapsed');
+        wrapper.classList.add('bj-bar-expanded');
+        setTimeout(function(){ select.focus(); }, 220);
+      });
+      chip.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          chip.click();
+        }
+      });
+    }
+    function refreshChip(){
+      var v = select.value;
+      var label = v || (select.options[0] ? select.options[0].textContent : '옵션 선택');
+      chip.textContent = v ? v : '옵션 선택';
+      chip.classList.toggle('is-empty', !v);
+    }
+    refreshChip();
+    /* 중복 등록 방지 */
+    if (!select.dataset.bjOptionBound) {
+      select.addEventListener('change', refreshChip);
+      select.dataset.bjOptionBound = '1';
+    }
   }
 
   /* v0.5.6: 위젯 내 렌탈사·약정 selector 빌드 */
