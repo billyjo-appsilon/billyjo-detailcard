@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.22 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.23 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -2363,25 +2363,29 @@
     });
   }
 
-  /* v0.5.21: 외부 .bb-inner 영구 감시 — 빌리조 main inject.js가 페이지 로드 후 늦게,
-     혹은 스크롤 트리거로 .bb-inner를 wrapper 밖 또는 늦게 생성하는 케이스 대응.
-     enhanceBottomBar 가드(dataset.bjBarEnhanced)로 1회만 실행되는 한계 우회. */
-  function hideExternalBbInner(){
+  /* v0.5.23: 격상 안 된 .bb-inner는 DOM에서 즉시 삭제 (hide 대신 완전 제거)
+     hideExternalBbInner (v0.5.21)가 display:none을 set했지만 빌리조 main inject.js가
+     다른 인라인 style을 덮어쓰면 노출 가능. DOM 삭제는 그런 race 자체를 차단. */
+  function removeStrayBbInner(){
     var wrapper = document.querySelector('.prod_view_bot.card.mt40');
-    document.querySelectorAll('.bb-inner').forEach(function(inner){
-      if (wrapper && wrapper.contains(inner)) return; /* wrapper 안은 격상 대상 */
-      if (inner.getAttribute('data-bj-extra-hidden') === '1') return; /* 이미 처리 */
-      inner.style.setProperty('display', 'none', 'important');
-      inner.style.setProperty('visibility', 'hidden', 'important');
-      inner.setAttribute('data-bj-extra-hidden', '1');
+    /* 1) wrapper 안 격상 안 된 .bb-inner — enhanceBottomBar 격상 trigger 먼저 */
+    if (wrapper && wrapper.querySelector('.bb-inner:not(.bj-bb-inner-merged)')) {
+      try { enhanceBottomBar(); } catch(e){}
+    }
+    /* 2) 격상 안 된 .bb-inner 모두 DOM 삭제 (wrapper 안 후 안 남은 것 + 밖 전부) */
+    document.querySelectorAll('.bb-inner:not(.bj-bb-inner-merged)').forEach(function(inner){
+      try {
+        if (inner.parentElement) inner.parentElement.removeChild(inner);
+      } catch(e){}
     });
   }
   function watchForBbInner(){
     if (window.__bjBbInnerWatched) return;
     window.__bjBbInnerWatched = true;
-    hideExternalBbInner();
+    removeStrayBbInner();
     if (!window.MutationObserver) return;
-    /* 영구 옵저버 — disconnect 안 함. 콜백은 lightweight (.bb-inner만 체크) */
+    /* 영구 옵저버 — disconnect 안 함. 새 .bb-inner mount 감지 시 즉시 처리.
+       콜백 lightweight (.bb-inner만 체크 + 필요시 격상/삭제). */
     var obs = new MutationObserver(function(mutations){
       var hasNewBbInner = false;
       for (var i = 0; i < mutations.length; i++) {
@@ -2395,18 +2399,12 @@
         }
         if (hasNewBbInner) break;
       }
-      if (hasNewBbInner) {
-        hideExternalBbInner();
-        /* wrapper 안에 들어온 .bb-inner면 enhanceBottomBar 재실행 trigger
-           (v0.5.14 idempotent 분기가 fallback 제거 + 격상 재실행) */
-        var wrapper = document.querySelector('.prod_view_bot.card.mt40');
-        if (wrapper && wrapper.querySelector('.bb-inner:not(.bj-bb-inner-merged)')) {
-          try { enhanceBottomBar(); } catch(e){}
-        }
-      }
+      if (hasNewBbInner) removeStrayBbInner();
     });
     try { obs.observe(document.body, { childList: true, subtree: true }); } catch(e){}
   }
+  /* v0.5.23: 하위 호환 alias — runAll의 기존 hideExternalBbInner 호출 유지 */
+  function hideExternalBbInner(){ removeStrayBbInner(); }
 
   /* v0.5.20: 업소용 카테고리 노출 — main inject.js가 hide한 prod_list/10-1153을 복원 +
      라벨 "업소용·창업" → "업소용"으로 단축. */
