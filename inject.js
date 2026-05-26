@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.13 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.14 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -889,6 +889,12 @@
     '  to{ opacity:1; transform:translateY(0) }',
     '}',
 
+    /* v0.5.14: fallback과 격상 안 된 .bb-inner가 공존 시 .bb-inner 안전망 숨김 */
+    '.prod_view_bot.card.mt40 .bj-bar-fallback ~ .bb-inner,',
+    '.prod_view_bot.card.mt40 .bj-bar-fallback + .bb-inner{',
+    '  display:none !important;',
+    '}',
+
     /* === v0.5.11: 빌리조 원본 2버튼 sticky 위젯(.prod_fix_wrap) 제거 ===
        우리 v0.5.x 위젯(.prod_view_bot.card.mt40 → fixed bottom)과 중복으로 떠 있어
        사용자 혼란 발생. 빌리조 원본 [장바구니][렌탈신청] 2버튼 sticky bar를 완전 숨김.
@@ -969,10 +975,22 @@
 
   function enhanceBottomBar(){
     var wrapper = document.querySelector('.prod_view_bot.card.mt40');
-    if (!wrapper || wrapper.dataset.bjBarEnhanced) return;
+    if (!wrapper) return;
 
     forceFixedStyle(wrapper);
     wrapper.classList.add('bj-bar-expanded');
+
+    /* v0.5.14: bb-inner가 늦게 들어왔는데 우리 fallback이 이미 있으면 fallback 제거 후 격상 시도 */
+    var currBbInner = wrapper.querySelector('.bb-inner');
+    if (wrapper.dataset.bjBarEnhanced) {
+      if (currBbInner && !currBbInner.classList.contains('bj-bb-inner-merged')) {
+        var oldFallback = wrapper.querySelector('.bj-bar-fallback');
+        if (oldFallback) oldFallback.remove();
+        wrapper.dataset.bjBarEnhanced = '';  /* 재실행 허용 */
+      } else {
+        return;  /* 이미 격상 완료 */
+      }
+    }
 
     /* v0.5.5: 위젯 안 .rantal_wrap·.card__tit·.card_sale 등 중복 콘텐츠는 CSS로 숨김 처리됨.
        남는 표시 요소: 핸들(제품명+가격) + bb-inner(약정 pill + 3버튼) */
@@ -1035,6 +1053,9 @@
     handle.addEventListener('keydown', function(e){
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
     });
+    /* v0.5.14: 핸들 중복 방지 — 이미 있으면 새것으로 교체 (재실행 케이스) */
+    var existingHandle = wrapper.querySelector(':scope > .bj-bar-handle');
+    if (existingHandle) existingHandle.remove();
     wrapper.insertBefore(handle, wrapper.firstChild);
 
     /* v0.4.0: SVG 아이콘 */
