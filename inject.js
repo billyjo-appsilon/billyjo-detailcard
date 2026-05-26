@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.11 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.12 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1306,26 +1306,67 @@
       document.querySelectorAll('details.help[open]').forEach(function(d){
         if (d !== t) d.removeAttribute('open');
       });
-      /* v0.5.10: PC viewport 위치 보정 — popup이 viewport 좌/우 경계 잘리면 transform으로 끌어당김
+      /* v0.5.12: PC popup을 position:fixed로 강제 전환 + trigger 위치 기반 좌표 직접 계산
+         이전 v0.5.10의 transform 보정만으로는 부모 .help가 깊은 컨테이너에 있을 때
+         viewport 경계 밖으로 잘리는 케이스 발생 → 좌표를 직접 set해서 100% 보장.
          (모바일 ≤900px은 이미 fixed bottom sheet라 viewport 안 보장됨) */
       if (window.innerWidth <= 900) return;
       var pop = t.querySelector('.help-pop');
-      if (!pop) return;
-      /* transform 초기화 후 한 프레임 뒤 측정 */
-      pop.style.transform = 'translateX(-50%)';
+      var sum = t.querySelector('summary');
+      if (!pop || !sum) return;
+      var sRect = sum.getBoundingClientRect();
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var margin = 12;
+      /* popup 크기 측정용 임시 노출 (visibility:hidden, 측정 후 원복) */
+      pop.style.position = 'fixed';
+      pop.style.top = '-9999px';
+      pop.style.left = '-9999px';
+      pop.style.transform = 'none';
+      pop.style.visibility = 'hidden';
+      pop.style.display = 'block';
       requestAnimationFrame(function(){
-        var rect = pop.getBoundingClientRect();
-        var vw = window.innerWidth;
-        var margin = 12;
-        if (rect.right > vw - margin) {
-          var overflow = rect.right - (vw - margin);
-          pop.style.transform = 'translateX(calc(-50% - ' + overflow + 'px))';
-        } else if (rect.left < margin) {
-          var shortfall = margin - rect.left;
-          pop.style.transform = 'translateX(calc(-50% + ' + shortfall + 'px))';
+        var pw = pop.offsetWidth || 280;
+        var ph = pop.offsetHeight || 100;
+        /* 기본 위치: trigger 가운데 정렬, trigger 아래 8px */
+        var left = sRect.left + sRect.width / 2 - pw / 2;
+        var top = sRect.bottom + 8;
+        /* 우측 경계 clamp */
+        if (left + pw > vw - margin) left = vw - pw - margin;
+        /* 좌측 경계 clamp */
+        if (left < margin) left = margin;
+        /* 하단 경계: popup이 viewport 아래로 벗어나면 trigger 위로 띄움 */
+        if (top + ph > vh - margin) {
+          var topAbove = sRect.top - ph - 8;
+          top = topAbove >= margin ? topAbove : Math.max(margin, vh - ph - margin);
         }
+        if (top < margin) top = margin;
+        pop.style.left = left + 'px';
+        pop.style.top = top + 'px';
+        pop.style.visibility = '';
+        pop.style.display = '';
       });
     }, true);
+    /* v0.5.12: close 시 inline style cleanup (다음 open 시 위치 재계산 보장) */
+    document.addEventListener('toggle', function(e){
+      var t = e.target;
+      if (!(t && t.tagName === 'DETAILS' && t.classList.contains('help')) || t.open) return;
+      var pop = t.querySelector('.help-pop');
+      if (!pop) return;
+      pop.style.position = '';
+      pop.style.left = '';
+      pop.style.top = '';
+      pop.style.transform = '';
+      pop.style.visibility = '';
+      pop.style.display = '';
+    }, true);
+    /* viewport resize 시 열린 popup 위치 재계산 */
+    window.addEventListener('resize', function(){
+      var opened = document.querySelector('details.help[open]');
+      if (!opened) return;
+      /* toggle 이벤트를 다시 발생시켜 위치 재계산 트리거 */
+      opened.removeAttribute('open');
+      requestAnimationFrame(function(){ opened.setAttribute('open', ''); });
+    });
     /* ESC 키로도 닫기 (접근성) */
     document.addEventListener('keydown', function(e){
       if (e.key === 'Escape') {
