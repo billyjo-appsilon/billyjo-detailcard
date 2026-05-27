@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.68 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.69 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -585,6 +585,96 @@
     '.bj-card-info-arrow{ margin-left:auto; flex:0 0 auto; font-weight:700; color:#0838F8 }',
     '@media (max-width:600px){',
     '  .bj-card-info-chip{ font-size:11.5px !important; padding:7px 10px !important; gap:6px !important }',
+    '}',
+
+    /* v0.5.69: 상담신청 modal */
+    '.bj-consult-modal-backdrop{',
+    '  position:fixed !important; inset:0 !important;',
+    '  background:rgba(0,0,0,0.5) !important;',
+    '  z-index:100002 !important;',
+    '  display:flex !important; align-items:center !important; justify-content:center !important;',
+    '  padding:20px !important;',
+    '  animation:bjConsultBackdropIn 0.18s ease-out;',
+    '  -webkit-tap-highlight-color:transparent;',
+    '}',
+    '@keyframes bjConsultBackdropIn{ from{ opacity:0 } to{ opacity:1 } }',
+    '.bj-consult-modal-box{',
+    '  position:relative !important;',
+    '  background:#fff !important; border-radius:16px !important;',
+    '  width:100% !important; max-width:380px !important;',
+    '  box-shadow:0 16px 48px rgba(0,0,0,0.25) !important;',
+    '  padding:28px 24px 22px !important;',
+    '  font-family:"Pretendard","Apple SD Gothic Neo",sans-serif !important;',
+    '  animation:bjConsultBoxIn 0.22s cubic-bezier(0.2,0.9,0.3,1);',
+    '  box-sizing:border-box !important;',
+    '}',
+    '@keyframes bjConsultBoxIn{',
+    '  from{ opacity:0; transform:translateY(20px) scale(0.95) }',
+    '  to{ opacity:1; transform:translateY(0) scale(1) }',
+    '}',
+    '.bj-consult-modal-close{',
+    '  position:absolute !important; top:10px !important; right:12px !important;',
+    '  background:transparent !important; border:0 !important;',
+    '  width:36px !important; height:36px !important;',
+    '  font-size:24px !important; color:#888 !important; cursor:pointer !important;',
+    '  line-height:1 !important;',
+    '}',
+    '.bj-consult-modal-close:hover{ color:#222 !important }',
+    '.bj-consult-modal-body{ text-align:center !important }',
+    '.bj-consult-title{ font-size:18px; font-weight:800; color:#0838F8; margin-bottom:14px }',
+    '.bj-consult-title-ok{ color:#16a34a }',
+    '.bj-consult-spinner{',
+    '  width:36px; height:36px; margin:18px auto;',
+    '  border:3px solid #e5e8ee; border-top-color:#0838F8;',
+    '  border-radius:50%;',
+    '  animation:bjSpin 0.85s linear infinite;',
+    '}',
+    '@keyframes bjSpin{ to{ transform:rotate(360deg) } }',
+    '.bj-consult-status{ font-size:13px; color:#666; margin-top:6px }',
+    '.bj-consult-agent{ font-size:14px; color:#444; margin-bottom:16px; line-height:1.4 }',
+    '.bj-consult-agent strong{ color:#0838F8; font-weight:800 }',
+    '.bj-consult-code-label{ font-size:11px; color:#888; font-weight:600; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase }',
+    '.bj-consult-code{ display:flex; justify-content:center; gap:8px; margin-bottom:14px }',
+    '.bj-consult-code-digit{',
+    '  display:flex; align-items:center; justify-content:center;',
+    '  width:52px; height:60px;',
+    '  background:linear-gradient(180deg, #fff8e7 0%, #fff3cc 100%);',
+    '  border:2px solid #ffd000; border-radius:10px;',
+    '  font-size:28px; font-weight:800; color:#3a2a00;',
+    '  font-family:"Pretendard",sans-serif;',
+    '  box-shadow:0 2px 8px rgba(255,208,0,0.3);',
+    '}',
+    '.bj-consult-instructions{',
+    '  font-size:12.5px; color:#555; line-height:1.5; margin-bottom:18px;',
+    '  background:#f7f9ff; padding:10px 12px; border-radius:8px;',
+    '}',
+    '.bj-consult-instructions strong{ color:#0838F8; font-weight:700 }',
+    '.bj-consult-call-btn{',
+    '  display:flex !important; align-items:center !important; gap:10px !important;',
+    '  width:100% !important; padding:14px 16px !important;',
+    '  background:linear-gradient(135deg, #0838F8 0%, #2154ff 100%) !important;',
+    '  color:#fff !important; text-decoration:none !important;',
+    '  border-radius:10px !important; font-weight:800 !important;',
+    '  font-family:"Pretendard",sans-serif !important;',
+    '  box-shadow:0 4px 12px rgba(8,56,248,0.3) !important;',
+    '  transition:transform 0.1s !important;',
+    '  box-sizing:border-box !important;',
+    '}',
+    '.bj-consult-call-btn:hover{ transform:translateY(-1px) }',
+    '.bj-consult-call-btn:active{ transform:translateY(0) }',
+    '.bj-consult-call-btn svg{ width:22px; height:22px; flex:0 0 auto }',
+    '.bj-consult-call-phone{ font-size:17px; flex:1; text-align:left; letter-spacing:0.3px }',
+    '.bj-consult-call-cta{ font-size:13px; opacity:0.9; flex:0 0 auto }',
+    '.bj-consult-expires{ font-size:11px; color:#999; margin-top:12px }',
+    '.bj-consult-mock-notice{',
+    '  font-size:10.5px; color:#b45309; margin-top:8px;',
+    '  background:#fff8e1; padding:5px 10px; border-radius:6px;',
+    '}',
+    '@media (max-width:600px){',
+    '  .bj-consult-modal-box{ padding:24px 20px 18px !important; max-width:340px !important }',
+    '  .bj-consult-code-digit{ width:48px; height:56px; font-size:26px }',
+    '  .bj-consult-call-btn{ padding:12px 14px !important }',
+    '  .bj-consult-call-phone{ font-size:16px }',
     '}',
 
     /* v0.5.65: 제휴카드 페이지 상단 강조 박스 */
@@ -1404,6 +1494,83 @@
       'z-index:99999!important;margin:0!important;';
   }
 
+  /* v0.5.69: 상담신청 modal — 4자리 코드 + 상담사 직통번호 안내 + 통화 연결.
+     admin2 backend endpoint 준비 시 window.__bjConsultApiUrl 설정으로 fetch 교체, 그 전엔 mock. */
+  function openConsultModal(){
+    var prev = document.getElementById('bj-consult-modal');
+    if (prev) prev.remove();
+    var modal = document.createElement('div');
+    modal.id = 'bj-consult-modal';
+    modal.className = 'bj-consult-modal-backdrop';
+    modal.innerHTML =
+      '<div class="bj-consult-modal-box" role="dialog" aria-label="상담사 배정">' +
+        '<button type="button" class="bj-consult-modal-close" aria-label="닫기">×</button>' +
+        '<div class="bj-consult-modal-body">' +
+          '<div class="bj-consult-title">📞 상담사 배정 중</div>' +
+          '<div class="bj-consult-spinner" aria-hidden="true"></div>' +
+          '<div class="bj-consult-status">잠시만 기다려 주세요...</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    /* 닫기: backdrop 클릭, X 클릭, ESC */
+    function close(){ try { modal.remove(); } catch(_){} document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if (e.key === 'Escape') close(); }
+    modal.addEventListener('click', function(e){
+      if (e.target === modal || e.target.classList.contains('bj-consult-modal-close')) close();
+    });
+    document.addEventListener('keydown', onKey);
+    /* 배정 시뮬레이션 — admin2 API 호출 또는 mock */
+    setTimeout(function(){
+      assignConsultant().then(function(data){
+        if (!modal.parentNode) return;  /* 사용자가 닫음 */
+        renderAssignedConsultant(modal, data);
+      });
+    }, 900);
+  }
+  function assignConsultant(){
+    /* admin2 backend endpoint 준비 시 window.__bjConsultApiUrl 설정 (예: 'https://admin2.appsilon.kr') */
+    if (window.__bjConsultApiUrl) {
+      var prodId = (location.pathname.match(/prod_view\/(\d+)/) || [])[1] || null;
+      var prodName = (document.querySelector('.prod_name b') || document.querySelector('.prod_name') || {}).textContent;
+      return fetch(window.__bjConsultApiUrl + '/api/consult/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: prodId, productName: prodName && prodName.trim() })
+      })
+        .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch(function(){ return mockAssignConsultant(); });
+    }
+    return Promise.resolve(mockAssignConsultant());
+  }
+  function mockAssignConsultant(){
+    return {
+      code: String(Math.floor(1000 + Math.random() * 9000)),
+      phone: '1577-9469',                  /* 빌리조 메인 상담 — admin2 연동 시 상담사 직통으로 교체 */
+      agentName: '빌리조 상담팀',
+      expiresAtMinutes: 30,
+      mock: true,
+    };
+  }
+  function renderAssignedConsultant(modal, d){
+    var phoneRaw = String(d.phone || '').replace(/[^\d]/g, '');
+    var codeDigits = String(d.code || '0000').split('');
+    modal.querySelector('.bj-consult-modal-body').innerHTML =
+      '<div class="bj-consult-title bj-consult-title-ok">✓ 상담사 배정 완료</div>' +
+      '<div class="bj-consult-agent">담당 <strong>' + (d.agentName || '빌리조 상담팀') + '</strong></div>' +
+      '<div class="bj-consult-code-label">상담 코드</div>' +
+      '<div class="bj-consult-code">' +
+        codeDigits.map(function(n){ return '<span class="bj-consult-code-digit">' + n + '</span>'; }).join('') +
+      '</div>' +
+      '<div class="bj-consult-instructions">전화 연결 후 <strong>위 4자리 코드</strong>를 상담사에게 알려주세요</div>' +
+      '<a class="bj-consult-call-btn" href="tel:' + phoneRaw + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor"/></svg>' +
+        '<span class="bj-consult-call-phone">' + escapeWidgetHtml(d.phone || '') + '</span>' +
+        '<span class="bj-consult-call-cta">통화 연결</span>' +
+      '</a>' +
+      '<div class="bj-consult-expires">유효시간 ' + (d.expiresAtMinutes || 30) + '분</div>' +
+      (d.mock ? '<div class="bj-consult-mock-notice">⚠️ 임시: admin2 연동 전 mock 응답</div>' : '');
+  }
+
   function enhanceBottomBar(){
     var wrapper = document.querySelector('.prod_view_bot.card.mt40');
     if (!wrapper) return;
@@ -1540,9 +1707,7 @@
           consult.type = 'button';
           consult.className = 'bb-btn bj-btn-consult';
           consult.innerHTML = SVG_PHONE + '상담신청';
-          consult.addEventListener('click', function(){
-            window.location.href = '/html/dh/counsel';
-          });
+          consult.addEventListener('click', openConsultModal);
           rightTop.appendChild(consult);
         }
       }
@@ -1567,9 +1732,7 @@
         if (typeof window.shoporder === 'function') window.shoporder('rent');
         else window.location.href = '/html/dh/counsel';
       });
-      fb.querySelector('.bj-fb-consult').addEventListener('click', function(){
-        window.location.href = '/html/dh/counsel';
-      });
+      fb.querySelector('.bj-fb-consult').addEventListener('click', openConsultModal);
     }
 
     /* v0.5.6: 렌탈사·약정 selector — 위젯에 컴팩트 UI 빌드.
