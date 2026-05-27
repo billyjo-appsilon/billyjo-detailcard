@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.59 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.60 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -529,6 +529,9 @@
     '  display:flex; align-items:center; gap:8px;',
     '}',
     '.bj-bar-handle-price{ color:#0838F8; font-weight:800; font-size:14px }',
+    /* v0.5.60: 가격 옆 ⓘ — drag gesture/핸들 토글과 충돌 안 나게 z-index 보강 + summary 클릭 영역 */
+    '.bj-card-help{ display:inline-block !important; position:relative !important; vertical-align:middle !important; margin-left:3px !important }',
+    '.bj-card-help > summary{ cursor:pointer !important; position:relative !important; z-index:2 !important }',
     '.bj-bar-handle-toggle{',
     '  width:36px; height:24px; border-radius:6px;',
     '  background:transparent; border:1px solid #dfdfdf;',
@@ -1817,17 +1820,37 @@
 
       mount.innerHTML = supTabs + termPills;
 
-      /* v0.5.7: 핸들 가격 — 카드할인 있으면 "월 N원 (카드 M원)" 형식, BEST면 라벨 추가 */
+      /* v0.5.7: 핸들 가격 — 카드할인 있으면 "월 N원 (카드 M원)" 형식, BEST면 라벨 추가
+         v0.5.60: 카드할인 있을 때 ⓘ details.help 추가 — 제휴카드 안내 페이지 링크 */
       var hp = handle.querySelector('.bj-bar-handle-price');
       if (hp) {
         var hasCardDc = term.effective > 0 && term.effective < term.priceNum;
         var bestTag = term.isBest ? '<span class="bj-bar-handle-best">BEST</span>' : '';
+        var cardHelp = hasCardDc ?
+          '<details class="help bj-card-help">' +
+            '<summary aria-label="제휴카드 안내"></summary>' +
+            '<div class="help-pop">' +
+              '<strong>제휴카드 청구할인 적용가입니다.</strong> 롯데·삼성·NH·KB국민 등 렌탈사별 제휴카드로 결제 시 매월 청구액에서 자동 할인됩니다.' +
+              '<br><br>' +
+              '<strong>어떤 카드를 써야 할인되나요?</strong> 렌탈사마다 제휴카드와 할인액이 다릅니다. 정확한 카드 종류·할인 조건은 아래 페이지에서 확인하세요.' +
+              '<br><br>' +
+              '<a href="/html/dh/partnership_card" style="display:inline-block;padding:8px 14px;background:#0838F8;color:#fff;border-radius:6px;text-decoration:none;font-weight:700">제휴카드 안내 페이지로 이동 →</a>' +
+            '</div>' +
+          '</details>' : '';
         if (hasCardDc) {
-          hp.innerHTML = bestTag + '카드 월 ' + term.effective.toLocaleString() + '원 <small style="color:#888;font-weight:400;font-size:11px">(정가 월 ' + term.price + '원)</small>';
+          hp.innerHTML = bestTag + '카드 월 ' + term.effective.toLocaleString() + '원 ' + cardHelp + ' <small style="color:#888;font-weight:400;font-size:11px">(정가 월 ' + term.price + '원)</small>';
         } else if (term.price) {
           hp.innerHTML = bestTag + '월 ' + term.price + '원';
         } else {
           hp.innerHTML = bestTag + '문의';
+        }
+        /* v0.5.60: ⓘ summary 클릭이 핸들의 drag gesture로 bubble하지 않게 stopPropagation.
+           매 render마다 다시 등록 (innerHTML 교체로 element 새로 생김). */
+        var cardSummary = hp.querySelector('.bj-card-help summary');
+        if (cardSummary) {
+          ['click', 'mousedown', 'touchstart'].forEach(function(evt){
+            cardSummary.addEventListener(evt, function(e){ e.stopPropagation(); }, evt === 'touchstart' ? { passive: true } : false);
+          });
         }
       }
     }
