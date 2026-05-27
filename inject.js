@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.53 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.54 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1039,6 +1039,12 @@
     '  #ai-card-root .rental-terms .bj-ownership-chip{',
     '    font-size:12px !important; padding:2px 8px !important;',
     '    box-shadow:none !important;',
+    '  }',
+    /* v0.5.54: 의무 사용 기간 위 dashed 제거 — 약정 기간과 의무 사용 기간은 동일 카테고리(약정 관련)
+       라 분리선 불필요. 그 다음 row(위약금/소유권)는 별도 카테고리라 dashed 유지. */
+    '  #ai-card-root .rental-terms .rt-r:nth-of-type(2){',
+    '    border-top:0 !important;',
+    '    padding-top:0 !important; margin-top:0 !important;',
     '  }',
     '}',
 
