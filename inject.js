@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.34 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.35 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1411,12 +1411,15 @@
        사용자 가시 박스가 만들어지지 않음. 우리 자체 clone(.bj-option-clone)만 신뢰. */
     var select = wrapper.querySelector('.bj-option-clone');
     if (!select) {
-      /* v0.5.17: wrapper 밖 visible select 찾아 클론 후 위젯에 삽입 */
+      /* v0.5.35: wrapper.contains() 가드 폐기 — 18055 등 페이지에서 native select가
+         wrapper(.prod_view_bot.card.mt40) 안의 .rantal_wrap > .option__wrap에 위치.
+         이전 가드는 그 native select도 skip해서 orig=null → 옵션 박스 안 만들어짐.
+         우리가 만든 .bj-option-clone만 skip하도록 좁힘. */
       var allSelects = document.querySelectorAll('.option_select, .bb-option-select');
       var orig = null;
       for (var i = 0; i < allSelects.length; i++) {
         var s = allSelects[i];
-        if (wrapper.contains(s)) continue;
+        if (s.classList && s.classList.contains('bj-option-clone')) continue;
         /* 빌리조 원본 sticky 위젯 안 (.prod_fix_wrap) select는 v0.5.11에서 숨겼지만 값/이벤트는 정상 — skip */
         if (s.closest && s.closest('.prod_fix_wrap')) continue;
         if (s.options && s.options.length > 1) { orig = s; break; }
