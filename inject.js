@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.38 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.39 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -2416,9 +2416,29 @@
       }).join('');
     }
 
+    /* v0.5.39: 표 위 제품 정보 헤더 — 제품명(굵게) + 모델명·관리주기(작고 흐리게) 2줄 */
+    var prodNameEl = document.querySelector('.prod_name b') || document.querySelector('.prod_name') ||
+                     document.querySelector('.bj-hero-meta-title');
+    var prodName = prodNameEl ? prodNameEl.textContent.trim() : '';
+    /* 모델명·관리 — .model_name small 우선, 그 다음 .model_name 전체 */
+    var modelSmall = document.querySelector('.model_name small');
+    var modelEl = modelSmall || document.querySelector('.model_name');
+    var modelText = modelEl ? modelEl.textContent.trim() : '';
+    /* 제품명에 prefix 브랜드 prefix 너무 길면 자르기: 'LG구독 - LG전자 정수기 ...' → 'LG전자 정수기 ...' */
+    prodName = prodName.replace(/^[A-Z가-힣]+\s*구독\s*[-·]\s*/, '').trim();
+    var titleHtml = '';
+    if (prodName) {
+      titleHtml =
+        '<div id="lptTitle" style="background:#0838f8;color:#fff;text-align:center;padding:14px 20px;font-size:15px;font-weight:700;border-radius:8px 8px 0 0;font-family:Pretendard,sans-serif;line-height:1.4">' +
+          escapeHtml(prodName) +
+          (modelText ? '<br><span style="font-size:12px;opacity:0.85;font-weight:400">' + escapeHtml(modelText) + '</span>' : '') +
+        '</div>';
+    }
+
     mount.innerHTML =
-      '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">' +
-        '<table style="width:100%;min-width:240px;border-collapse:collapse;font-family:Pretendard,sans-serif;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e8ee">' +
+      titleHtml +
+      '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e5e8ee;' + (titleHtml ? 'border-top:0;border-radius:0 0 8px 8px' : 'border-radius:8px') + '">' +
+        '<table style="width:100%;min-width:240px;border-collapse:collapse;font-family:Pretendard,sans-serif;background:#fff">' +
           '<thead><tr style="background:#0838f8;color:#fff;font-size:12px">' + headerCols + '</tr></thead>' +
           '<tbody>' + rows + '</tbody>' +
         '</table>' +
@@ -2426,10 +2446,25 @@
     section.hidden = false;
     section.dataset.bjLptMounted = '1';
 
-    /* v0.5.1: 본문 #livePriceTable 숨김 — 카드 내부 SLOT 8이 단일 출처가 되도록 */
+    /* v0.5.1+v0.5.39: 본문 #livePriceTable + wrapper 숨김 — 카드 내부 SLOT 8이 단일 출처.
+       이전엔 #livePriceTable만 hide했는데 그 부모 wrapper(약정·카드 할인가 라벨, 안내 문구
+       포함)가 보여 사용자가 중복 인식. wrapper도 함께 hide. */
     var bodyLpt = document.getElementById('livePriceTable');
     if (bodyLpt && bodyLpt.id !== mount.id) {
       bodyLpt.style.setProperty('display', 'none', 'important');
+      /* 가장 가까운 의미있는 wrapper(section/article/div with significant class)도 hide */
+      var ancestor = bodyLpt.parentElement;
+      var depth = 0;
+      while (ancestor && depth < 4) {
+        var cls = String(ancestor.className || '');
+        if (/price|rental|약정|table_wrap|sec/i.test(cls) && !ancestor.closest('#ai-card-root')) {
+          ancestor.style.setProperty('display', 'none', 'important');
+          ancestor.dataset.bjLptWrapperHidden = '1';
+          break;
+        }
+        ancestor = ancestor.parentElement;
+        depth++;
+      }
     }
   }
 
