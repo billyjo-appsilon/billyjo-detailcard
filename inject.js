@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.37 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.38 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -494,6 +494,7 @@
     '.bj-bar-handle:hover{ background:#f5f5f5 }',
     '.bj-bar-handle:hover::before{ background:#0838F8; opacity:1; width:56px }',
     '.bj-bar-handle:active::before{ background:#0838F8; width:60px; opacity:1 }',
+    /* visible grip bar — 기존 그대로 (pointer-events:none) */
     '.bj-bar-handle::before{',
     '  content:""; position:absolute; top:7px; left:50%;',
     '  transform:translateX(-50%);',
@@ -501,6 +502,16 @@
     '  background:#b8b8b8; pointer-events:none;',
     '  transition:background 0.15s, width 0.2s ease-out, opacity 0.15s;',
     '  opacity:0.9;',
+    '}',
+    /* v0.5.38: grip bar 위 큰 invisible hit zone — 사용자가 바 근처(±50px)만 눌러도
+       클릭이 핸들로 위임되어 토글 작동. ::before는 시각, ::after는 hit area 분리. */
+    '.bj-bar-handle::after{',
+    '  content:""; position:absolute; top:0; left:50%;',
+    '  transform:translateX(-50%);',
+    '  width:120px; height:18px;',
+    '  background:transparent;',
+    '  pointer-events:auto; cursor:pointer;',
+    '  z-index:1;',
     '}',
     /* 접힘 상태: grip 살짝 펄스 (열기 유도) */
     '.prod_view_bot.card.mt40.bj-bar-collapsed .bj-bar-handle::before{',
@@ -1906,23 +1917,28 @@
     });
   }
 
-  /* (e) v0.3.8: 약정 기간·의무 사용 기간 라벨에 ⓘ 툴팁 동적 주입 (실서버에서 AI 카드 HTML에
-       해당 마크업 없을 수 있어 fallback 처리) */
-  var TERM_HELP = {
-    '약정 기간': '<strong>약정 기간</strong>은 렌탈 계약의 전체 기간입니다. 이 기간 동안 매월 렌탈료를 납부하며, 종료 시점에 제품 소유권이 이전(또는 반환)됩니다. 약정을 채워야 광고된 월 렌탈료가 유지됩니다.',
-    '의무 사용 기간': '<strong>의무 사용 기간</strong>은 위약금이 부과되는 최소 기간입니다. 이 기간이 지난 뒤 해지하면 별도 위약금 없이 자유로운 해지가 가능합니다. 약정 기간보다 짧은 게 일반적이며, 짧을수록 사용자에게 유리합니다.'
-  };
+  /* (e) v0.3.8: 약정 기간·의무 사용 기간 라벨에 ⓘ 툴팁 동적 주입
+       v0.5.38: 두 설명을 약정 기간 박스 하나로 통합. 의무 사용 기간 ⓘ는 추가하지 않음.
+       사용자가 한 번 펼치면 두 개념을 함께 비교 가능 — 분리 노출 시 정보 단편화. */
+  var COMBINED_TERM_HELP =
+    '<strong>약정 기간</strong>은 렌탈 계약의 전체 기간입니다. 이 기간 동안 매월 렌탈료를 납부하며, 종료 시점에 제품 소유권이 이전(또는 반환)됩니다. 약정을 채워야 광고된 월 렌탈료가 유지됩니다.' +
+    '<br><br>' +
+    '<strong>의무 사용 기간</strong>은 위약금이 부과되는 최소 기간입니다. 이 기간이 지난 뒤 해지하면 별도 위약금 없이 자유로운 해지가 가능합니다. 약정 기간보다 짧은 게 일반적이며, 짧을수록 사용자에게 유리합니다.';
   function addRentalTermsHelp(){
     var rows = document.querySelectorAll('#ai-card-root .rental-terms .rt-r .rt-l');
     rows.forEach(function(label){
       if (label.dataset.bjHelpAdded) return;
       var key = label.textContent.trim();
-      if (!TERM_HELP[key]) return;
+      /* v0.5.38: '약정 기간' 라벨에만 통합 설명 박스 추가. '의무 사용 기간' 라벨은 skip */
+      if (key !== '약정 기간') {
+        label.dataset.bjHelpAdded = '1';
+        return;
+      }
       var details = document.createElement('details');
       details.className = 'help';
       details.innerHTML =
-        '<summary aria-label="' + key + ' 설명"></summary>' +
-        '<div class="help-pop">' + TERM_HELP[key] + '</div>';
+        '<summary aria-label="약정 기간·의무 사용 기간 설명"></summary>' +
+        '<div class="help-pop">' + COMBINED_TERM_HELP + '</div>';
       label.appendChild(document.createTextNode(' '));
       label.appendChild(details);
       label.dataset.bjHelpAdded = '1';
