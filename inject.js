@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.61 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.62 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1829,12 +1829,12 @@
 
       mount.innerHTML = supTabs + termPills;
 
-      /* v0.5.7: 핸들 가격 — 카드할인 있으면 "월 N원 (카드 M원)" 형식, BEST면 라벨 추가
-         v0.5.60: 카드할인 있을 때 ⓘ details.help 추가 — 제휴카드 안내 페이지 링크 */
+      /* v0.5.7: 핸들 가격 — 카드할인 있으면 "월 N원 (카드 M원)" 형식
+         v0.5.60: 카드할인 있을 때 ⓘ details.help 추가 — 제휴카드 안내 페이지 링크
+         v0.5.62: 핸들 BEST 배지 제거 — 약정 pill의 .bj-ws-best-badge와 중복. */
       var hp = handle.querySelector('.bj-bar-handle-price');
       if (hp) {
         var hasCardDc = term.effective > 0 && term.effective < term.priceNum;
-        var bestTag = term.isBest ? '<span class="bj-bar-handle-best">BEST</span>' : '';
         var cardHelp = hasCardDc ?
           '<details class="help bj-card-help">' +
             '<summary aria-label="제휴카드 안내"></summary>' +
@@ -1847,11 +1847,11 @@
             '</div>' +
           '</details>' : '';
         if (hasCardDc) {
-          hp.innerHTML = bestTag + '카드 월 ' + term.effective.toLocaleString() + '원 ' + cardHelp + ' <small style="color:#888;font-weight:400;font-size:11px">(정가 월 ' + term.price + '원)</small>';
+          hp.innerHTML = '카드 월 ' + term.effective.toLocaleString() + '원 ' + cardHelp + ' <small style="color:#888;font-weight:400;font-size:11px">(정가 월 ' + term.price + '원)</small>';
         } else if (term.price) {
-          hp.innerHTML = bestTag + '월 ' + term.price + '원';
+          hp.innerHTML = '월 ' + term.price + '원';
         } else {
-          hp.innerHTML = bestTag + '문의';
+          hp.innerHTML = '문의';
         }
         /* v0.5.60: ⓘ summary 클릭이 핸들의 drag gesture로 bubble하지 않게 stopPropagation.
            매 render마다 다시 등록 (innerHTML 교체로 element 새로 생김). */
