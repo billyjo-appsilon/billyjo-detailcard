@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.58 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.59 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -2056,6 +2056,35 @@
     rt.dataset.bjOwnershipChecked = 'ownership';
   }
 
+  /* v0.5.59: 페르소나 카드 아이콘 — 페르소나 제목 텍스트에 따라 고객을 묘사하는
+     Tabler 아이콘으로 자동 매핑. 샘플 단계 — 우선 "1인·신혼"만 적용, 사용자 확인 후 확장. */
+  var PERSONA_ICON_MAP = [
+    { match: /1인|신혼|커플/, icon: 'ti-user-heart' },
+    /* 다음 단계 확장 후보:
+       { match: /가족|패밀리/, icon: 'ti-users' },
+       { match: /맘|육아|아기|키즈/, icon: 'ti-baby-carriage' },
+       { match: /시니어|노년|부모/, icon: 'ti-walk' },
+       { match: /오피스|직장|프로/, icon: 'ti-briefcase' },
+       { match: /원룸|자취/, icon: 'ti-building-cottage' }, */
+  ];
+  function personalizePersonaIcons(){
+    document.querySelectorAll('#ai-card-root .p').forEach(function(card){
+      if (card.dataset.bjPersonaIconSet) return;
+      var titleEl = card.querySelector('.rec-p-title');
+      var iconEl = card.querySelector('.p-top i');
+      if (!titleEl || !iconEl) return;
+      var title = titleEl.textContent || '';
+      for (var i = 0; i < PERSONA_ICON_MAP.length; i++) {
+        var rule = PERSONA_ICON_MAP[i];
+        if (rule.match.test(title)) {
+          iconEl.className = 'ti ' + rule.icon;
+          card.dataset.bjPersonaIconSet = '1';
+          break;
+        }
+      }
+    });
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // 2.y) 하단 위젯 가시성 — AI 카드 완전 통과 후 노출 + 드래그 게스처 (v0.5.2)
   //
@@ -2884,6 +2913,7 @@
     alignCategoryScroll();
     addRentalTermsHelp();
     addOwnershipNotice();    /* v0.5.47: 반납 조건 아닌 제품에 '만기 후 소유권 이전' chip */
+    personalizePersonaIcons(); /* v0.5.59: 페르소나 카드 아이콘 (현재 1인·신혼 샘플) */
     fetchAndInjectAICard();
     hideOriginalSpecsAndSimplifyLpt();
     setupBottomBarVisibility();
