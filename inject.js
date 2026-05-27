@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.49 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.50 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1029,7 +1029,16 @@
     '  content:"✓ "; font-weight:700;',
     '}',
     '@media (max-width:600px){',
-    '  #ai-card-root .rental-terms .bj-ownership-chip{ font-size:12px !important; padding:4px 10px !important }',
+    /* v0.5.50: 모바일에서 ownership row를 다른 .rt-r와 동일 정렬 (수평 baseline).
+       padding-top/margin-top/border-top 제거 + chip 컴팩트화로 row height 일관. */
+    '  #ai-card-root .rental-terms .bj-ownership-row{',
+    '    padding-top:0 !important; margin-top:0 !important;',
+    '    border-top:0 !important;',
+    '  }',
+    '  #ai-card-root .rental-terms .bj-ownership-chip{',
+    '    font-size:12px !important; padding:2px 8px !important;',
+    '    box-shadow:none !important;',
+    '  }',
     '}',
 
     /* body 하단 패딩 — fixed 위젯이 마지막 콘텐츠 가리지 않게
