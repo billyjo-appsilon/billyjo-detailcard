@@ -1,5 +1,5 @@
 /*!
- * billyjo-detailcard v0.5.71 — 상세페이지 카드 클라이언트 패치
+ * billyjo-detailcard v0.5.72 — 상세페이지 카드 클라이언트 패치
  * https://github.com/billyjo-appsilon/billyjo-detailcard
  *
  * 적용 페이지: /html/dh_prod/prod_view/*  (제품 상세 페이지)
@@ -1496,6 +1496,15 @@
 
   /* v0.5.69: 상담신청 modal — 4자리 코드 + 상담사 직통번호 안내 + 통화 연결.
      admin2 backend endpoint 준비 시 window.__bjConsultApiUrl 설정으로 fetch 교체, 그 전엔 mock. */
+  /* v0.5.72: 페이지 로드 시 admin2 warmup ping (cold start 회피).
+     '/health'는 매우 가벼운 endpoint — 첫 user click 전에 lambda 깨워둠. */
+  function warmupAdmin2(){
+    if (window.__bjAdmin2Warmed) return;
+    window.__bjAdmin2Warmed = true;
+    var base = window.__bjConsultApiUrl || 'https://billyjo-admin2.vercel.app';
+    try { fetch(base + '/health', { method: 'GET', mode: 'cors' }).catch(function(){}); } catch(_){}
+  }
+
   function openConsultModal(){
     var prev = document.getElementById('bj-consult-modal');
     if (prev) prev.remove();
@@ -1508,49 +1517,81 @@
         '<div class="bj-consult-modal-body">' +
           '<div class="bj-consult-title">📞 상담사 배정 중</div>' +
           '<div class="bj-consult-spinner" aria-hidden="true"></div>' +
-          '<div class="bj-consult-status">잠시만 기다려 주세요...</div>' +
+          '<div class="bj-consult-status">상담사를 연결 중입니다...</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
-    /* 닫기: backdrop 클릭, X 클릭, ESC */
     function close(){ try { modal.remove(); } catch(_){} document.removeEventListener('keydown', onKey); }
     function onKey(e){ if (e.key === 'Escape') close(); }
     modal.addEventListener('click', function(e){
       if (e.target === modal || e.target.classList.contains('bj-consult-modal-close')) close();
     });
     document.addEventListener('keydown', onKey);
-    /* 배정 시뮬레이션 — admin2 API 호출 또는 mock */
+    /* v0.5.72: spinner 지연 200ms → 즉시 fetch 시작 (전체 응답시간 단축) */
     setTimeout(function(){
       assignConsultant().then(function(data){
-        if (!modal.parentNode) return;  /* 사용자가 닫음 */
+        if (!modal.parentNode) return;
         renderAssignedConsultant(modal, data);
+      }).catch(function(err){
+        if (!modal.parentNode) return;
+        renderAssignError(modal, err);
       });
-    }, 900);
+    }, 200);
   }
+
+  /* v0.5.72: AbortController + 18초 timeout + 1회 retry (cold start 안전망).
+     mock fallback 완전 폐기 — admin2 실 응답만 사용. 실패 시 명시적 에러 UI. */
+  function _assignFetchOnce(base, body, timeoutMs){
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function(){ if (ctrl) try { ctrl.abort(); } catch(_){} }, timeoutMs);
+    var opts = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(base + '/v1/consult/quick-assign', opts)
+      .then(function(r){
+        clearTimeout(timer);
+        if (!r.ok) {
+          return r.text().then(function(t){
+            var err = new Error('HTTP ' + r.status);
+            err.status = r.status; err.body = t;
+            throw err;
+          });
+        }
+        return r.json();
+      });
+  }
+
   function assignConsultant(){
-    /* v0.5.70: default endpoint = https://admin2.billyjo.co.kr/v1/consult/quick-assign.
-       v0.5.71: SSL 발급 대기 중 임시 vercel.app URL 사용 — 자동 발급 완료 후 admin2.billyjo.co.kr로 복귀 예정.
-       호스트 override 필요 시 window.__bjConsultApiUrl 설정.
-       admin2 backend 5xx/4xx/network error → mock fallback (사용자 경험 끊김 없음). */
+    /* v0.5.72: admin2 실 endpoint 호출, mock fallback 폐기. timeout 18s + retry 1회.
+       호스트 override: window.__bjConsultApiUrl */
     var base = window.__bjConsultApiUrl || 'https://billyjo-admin2.vercel.app';
     var prodId = (location.pathname.match(/prod_view\/(\d+)/) || [])[1] || null;
     var prodName = (document.querySelector('.prod_name b') || document.querySelector('.prod_name') || {}).textContent;
-    return fetch(base + '/v1/consult/quick-assign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId: prodId, productName: prodName && prodName.trim() })
-    })
-      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .catch(function(){ return mockAssignConsultant(); });
+    var body = { productId: prodId, productName: prodName && prodName.trim() };
+    return _assignFetchOnce(base, body, 18000).catch(function(err){
+      /* 1차 실패(주로 cold start 또는 일시 네트워크) → 1.5초 대기 후 재시도 — 두 번째는 더 짧은 timeout */
+      return new Promise(function(resolve, reject){
+        setTimeout(function(){
+          _assignFetchOnce(base, body, 10000).then(resolve, reject);
+        }, 1500);
+      });
+    });
   }
-  function mockAssignConsultant(){
-    return {
-      code: String(Math.floor(1000 + Math.random() * 9000)),
-      phone: '1577-9469',                  /* 빌리조 메인 상담 — admin2 연동 시 상담사 직통으로 교체 */
-      agentName: '빌리조 상담팀',
-      expiresAtMinutes: 30,
-      mock: true,
-    };
+
+  function renderAssignError(modal, err){
+    var msg = '잠시 후 다시 시도해 주세요.';
+    if (err && err.status === 503) msg = '현재 통화 가능한 상담사가 없습니다. 잠시 후 다시 시도해 주세요.';
+    modal.querySelector('.bj-consult-modal-body').innerHTML =
+      '<div class="bj-consult-title" style="color:#b91c1c">⚠️ 연결 실패</div>' +
+      '<div class="bj-consult-agent" style="color:#555;margin-top:10px">' + msg + '</div>' +
+      '<a class="bj-consult-call-btn" href="tel:1577-9469" style="margin-top:16px;background:linear-gradient(135deg,#666,#888)">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" fill="currentColor"/></svg>' +
+        '<span class="bj-consult-call-phone">1577-9469</span>' +
+        '<span class="bj-consult-call-cta">대표번호로 직접</span>' +
+      '</a>';
   }
   function renderAssignedConsultant(modal, d){
     var phoneRaw = String(d.phone || '').replace(/[^\d]/g, '');
@@ -1568,8 +1609,7 @@
         '<span class="bj-consult-call-phone">' + escapeWidgetHtml(d.phone || '') + '</span>' +
         '<span class="bj-consult-call-cta">통화 연결</span>' +
       '</a>' +
-      '<div class="bj-consult-expires">유효시간 ' + (d.expiresAtMinutes || 30) + '분</div>' +
-      (d.mock ? '<div class="bj-consult-mock-notice">⚠️ 임시: admin2 연동 전 mock 응답</div>' : '');
+      '<div class="bj-consult-expires">유효시간 ' + (d.expiresAtMinutes || 30) + '분</div>';
   }
 
   function enhanceBottomBar(){
@@ -1754,6 +1794,8 @@
     });
 
     wrapper.dataset.bjBarEnhanced = '1';
+    /* v0.5.72: 위젯 enhance 완료 시 admin2 warmup ping (cold start 회피) */
+    try { warmupAdmin2(); } catch(_){}
   }
 
   /* v0.5.15+v0.5.17: 옵션 select 처리 — 핸들 옆 chip 미러링 + 위젯에 select 노출.
