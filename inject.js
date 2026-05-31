@@ -3403,8 +3403,15 @@
     watchForBbInner();        /* v0.5.21: 영구 옵저버 설치 (한 번만) */
     ensureOptionSelect();     /* v0.5.27: 옵션 select 위젯에 노출 보장 */
     hideDuplicateBodyLpt();   /* v0.5.40: 본문 LPT 중복 hide (빌리조 재렌더 대응) */
-    refreshWidgetSelectorIfLptChanged();  /* v0.5.71: LPT sig 채워진 후 약정 pill 재빌드 (타사보상 추가) */
+    try { refreshWidgetSelectorIfLptChanged(); } catch(_){}  /* v0.5.71: try-wrap */
   }
+
+  /* v0.5.71c: runAll 의존 폐기 — 독립 setTimeout으로 LPT 변경 감지 보장 */
+  [200, 600, 1200, 2500, 5000, 8000].forEach(function(d){
+    setTimeout(function(){
+      try { refreshWidgetSelectorIfLptChanged(); } catch(_){}
+    }, d);
+  });
 
   /* v0.5.71: enhanceBottomBar 1회 가드로 buildWidgetSelector가 LPT 채워지기 전에만 실행되는 문제 보강.
      LPT signature가 변경(또는 채워짐)되면 약정 pill을 새 데이터(타사보상 포함)로 재빌드.
