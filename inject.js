@@ -3403,6 +3403,24 @@
     watchForBbInner();        /* v0.5.21: 영구 옵저버 설치 (한 번만) */
     ensureOptionSelect();     /* v0.5.27: 옵션 select 위젯에 노출 보장 */
     hideDuplicateBodyLpt();   /* v0.5.40: 본문 LPT 중복 hide (빌리조 재렌더 대응) */
+    refreshWidgetSelectorIfLptChanged();  /* v0.5.71: LPT sig 채워진 후 약정 pill 재빌드 (타사보상 추가) */
+  }
+
+  /* v0.5.71: enhanceBottomBar 1회 가드로 buildWidgetSelector가 LPT 채워지기 전에만 실행되는 문제 보강.
+     LPT signature가 변경(또는 채워짐)되면 약정 pill을 새 데이터(타사보상 포함)로 재빌드. */
+  function refreshWidgetSelectorIfLptChanged() {
+    var wrapper = document.querySelector('.prod_view_bot.card.mt40');
+    if (!wrapper || !wrapper.dataset.bjBarEnhanced) return;
+    var lptEl = document.querySelector('[data-bj-lpt-signature]');
+    var sig = lptEl ? (lptEl.getAttribute('data-bj-lpt-signature') || '') : '';
+    if (!sig) return;
+    if (wrapper.dataset.bjLastWidgetSig === sig) return;
+    wrapper.dataset.bjLastWidgetSig = sig;
+    var handle = wrapper.querySelector('.bj-bar-handle');
+    if (!handle) return;
+    var prev = wrapper.querySelector('.bj-widget-selector');
+    if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    try { buildWidgetSelector(wrapper, handle); } catch(_) {}
   }
 
   injectCSS();      // CSS 즉시 — head 있으면
