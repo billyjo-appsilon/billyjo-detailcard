@@ -878,6 +878,23 @@
     '.bj-ws-best-badge{',
     '  font-size:9px !important; padding:2px 5px !important;',
     '}',
+    /* v0.5.70: 타사보상 약정 pill — 청록 배지 + 미묘한 톤 차이 */
+    '.bj-ws-wt-badge{',
+    '  display:inline-flex !important; align-items:center !important;',
+    '  background:linear-gradient(135deg,#0891b2 0%,#0e7490 100%) !important;',
+    '  color:#fff !important; font-size:9px !important; font-weight:700 !important;',
+    '  padding:2px 5px !important; border-radius:6px !important; letter-spacing:0.3px !important;',
+    '  line-height:1 !important; font-family:Pretendard,sans-serif !important;',
+    '  margin-right:5px !important; flex:0 0 auto !important; height:auto !important;',
+    '}',
+    '.bj-ws-term-pill.is-warranty-transfer{',
+    '  background:linear-gradient(180deg,#f0fbfd 0%,#fff 100%) !important;',
+    '  border-color:#a5e0ea !important;',
+    '}',
+    '.bj-ws-term-pill.is-warranty-transfer.active{',
+    '  border-color:#0891b2 !important; background:#e0f7fb !important;',
+    '  box-shadow:0 0 0 2px rgba(8,145,178,0.15) !important;',
+    '}',
     '.bj-ws-best-dot{',
     '  display:inline-block !important; width:6px !important; height:6px !important;',
     '  margin-left:5px !important; border-radius:50% !important;',
@@ -2041,6 +2058,57 @@
     }).filter(function(s){ return s.terms.length > 0; });
     if (suppliers.length === 0) return;
 
+    /* v0.5.70: LPT signature에서 "타사보상" 약정 행 추출해 각 supplier의 terms에 추가.
+       정수기 native .month_box에 타사보상 옵션이 누락된 케이스 보강 — 약정 pill 풀세트 제공.
+       매칭 규칙: LPT sig의 service(예: '방문관리')와 supplier.name 부분 일치 시 해당 sup에 합류,
+       그 외는 첫 supplier에 합류 (single-sup 케이스 robust). */
+    try {
+      var lptEl = document.querySelector('[data-bj-lpt-signature]');
+      var sig = lptEl ? (lptEl.getAttribute('data-bj-lpt-signature') || '') : '';
+      if (sig) {
+        var wtRows = sig.split(';').filter(Boolean).map(function(row){
+          var p = row.split('|');
+          return { service: (p[0]||'').trim(), term: (p[1]||'').trim(), price: (p[2]||'').trim(), dcPrice: (p[3]||'').trim() };
+        }).filter(function(r){ return /타사보상/.test(r.term); });
+
+        if (wtRows.length > 0) {
+          var pickSupIdx = function(serviceText){
+            if (suppliers.length === 1) return 0;
+            for (var si = 0; si < suppliers.length; si++) {
+              if (serviceText && suppliers[si].name && (
+                suppliers[si].name.indexOf(serviceText) >= 0 || serviceText.indexOf(suppliers[si].name) >= 0
+              )) return si;
+            }
+            return 0;
+          };
+          wtRows.forEach(function(r){
+            var sidx = pickSupIdx(r.service);
+            var sup = suppliers[sidx];
+            // 중복 방지 — 이미 같은 term 라벨 있으면 skip
+            var label = r.term;
+            if (sup.terms.some(function(t){ return t.month === label; })) return;
+            var priceNum = digits(r.price);
+            var dcNum = digits(r.dcPrice);
+            sup.terms.push({
+              el: null,                 // underlying month_box 없음 — click 동기화 불가
+              month: label,             // '5년의무 타사보상' 등
+              monthKey: null,
+              price: r.price || '',
+              priceNum: priceNum,
+              dcprice: r.dcPrice || '',
+              dcNum: dcNum,
+              cardDis: '0',
+              cardDisNum: 0,
+              effective: dcNum > 0 ? dcNum : priceNum,
+              supname: sup.name,
+              supcode: null,
+              isWarrantyTransfer: true,
+            });
+          });
+        }
+      }
+    } catch(_){}
+
     /* v0.5.7: BEST 자동 선택 — 모든 (렌탈사 × 약정) 조합에서 effective(카드할인 후 월 부담액) 최저.
        동률이면 약정 길이 짧은 쪽 우선(약속 부담 적은 게 유리). */
     var bestSupIdx = 0, bestTermIdx = 0, bestEff = Infinity, bestMonths = Infinity;
@@ -2122,8 +2190,10 @@
                 '<span class="bj-ws-term-price-lbl bj-ws-lbl-orig">정가</span>' +
                 '<span class="bj-ws-term-price">' + escapeWidgetHtml(t.price || '문의') + '</span>';
             }
-            return '<button type="button" class="bj-ws-term-pill bj-ws-term-pill-2row' + (i === state.termIdx ? ' active' : '') + (t.isBest ? ' is-best' : '') + (hasCardDc ? ' has-card-dc' : '') + '" data-i="' + i + '">' +
-              '<div class="bj-ws-term-row1">' + bestBadge +
+            var wtBadge = t.isWarrantyTransfer ? '<span class="bj-ws-wt-badge" title="타사 보상 적용 약정">타사보상</span>' : '';
+            var wtCls = t.isWarrantyTransfer ? ' is-warranty-transfer' : '';
+            return '<button type="button" class="bj-ws-term-pill bj-ws-term-pill-2row' + (i === state.termIdx ? ' active' : '') + (t.isBest ? ' is-best' : '') + (hasCardDc ? ' has-card-dc' : '') + wtCls + '" data-i="' + i + '">' +
+              '<div class="bj-ws-term-row1">' + bestBadge + wtBadge +
                 '<span class="bj-ws-term-period">' + escapeWidgetHtml(t.month) + '</span>' +
               '</div>' +
               '<div class="bj-ws-term-row2">' + priceRow + '</div>' +
@@ -2171,7 +2241,8 @@
       triggerUnderlying();
     }
     function triggerUnderlying(){
-      /* underlying의 .month_box.layer_price 클릭 — 가격 데이터 동기화 + 주문 시 올바른 supplier/term 사용 */
+      /* underlying의 .month_box.layer_price 클릭 — 가격 데이터 동기화.
+         타사보상 약정(t.el === null)은 underlying이 없으므로 skip — 사용자가 상담/주문 시 별도 안내. */
       var t = suppliers[state.supIdx].terms[state.termIdx];
       if (t && t.el) {
         try { t.el.click(); } catch(_){}
